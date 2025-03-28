@@ -1,13 +1,20 @@
-import { useState } from 'react'
-import './App.css'
-import Login from './app/login/Login'
+import React, { lazy, Suspense } from "react"
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
-function App() {
-  const [count, setCount] = useState(0)
+const Login = lazy(() => import("./app/login/Login"));
+
+
+function App() {  
 
   return (
     <>
-      <Login />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Login />} />
+          <Route path="/login" element={<Login />} />
+        </Routes>
+      </BrowserRouter>
+
     </>
   )
 }
