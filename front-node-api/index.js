@@ -10,13 +10,13 @@ require('./config/db')
 
 // Swagger 
 const swaggerUi = require("swagger-ui-express");
-const swaggerFile = require("./swagger-output.json");
+const swaggerSpec = require("./swagger");
 const swaggerAuth = require("./middleware/swagger-auth")
 const swaggerCssOptions = {
     customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.css'
 };
 // Serve Swagger UI
-app.use("/api-docs", swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerFile, { customCss: swaggerCssOptions }));
+app.use("/api-docs", swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec, { customCss: swaggerCssOptions }));
 
 // Connect Database
 mongoose.Promise = global.Promise;
@@ -25,20 +25,20 @@ mongoose.Promise = global.Promise;
 const port = process.env.PORT || 5000;
 
 // Redis
-const { createClient } =  require('redis');
-const redisClient = createClient();
+// const { createClient } =  require('redis');
+// const redisClient = createClient();
 
-redisClient.on("error", (err) => console.error("Redis Client Error:", err));
+// redisClient.on("error", (err) => console.error("Redis Client Error:", err));
 
-(async () => {
-    try {
-        await redisClient.connect();
-        console.log("Redis client connected successfully");
-    } catch (err) {
-        console.error("Error connecting Redis client:", err);
-    }
-})();
-global.redisClient = redisClient;
+// (async () => {
+//     try {
+//         await redisClient.connect();
+//         console.log("Redis client connected successfully");
+//     } catch (err) {
+//         console.error("Error connecting Redis client:", err);
+//     }
+// })();
+// global.redisClient = redisClient;
 
 app.use(cors({ origin: "*", credentials: true }));
 app.use(morgan("dev"));

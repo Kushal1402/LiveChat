@@ -1,41 +1,34 @@
-const swaggerAutoGen = require("swagger-autogen")();
+const swaggerJsdoc = require("swagger-jsdoc");
 const hostName = process.env.SITE_URL;
 
 // Swagger options
-const doc = {
-    info: {
-        title: "Vibe Chat API",
-        description: "Vibe Chat API documentation",
-    },
-    host: hostName,
-    basePath: "/",
-    schemes: ["http", "https"],
-    consumes: ["application/json", "multipart/form-data"],
-    produces: ["application/json"],
-    autoBody: true,
-    tags: [
+const options = {
+    definition: {
+      openapi: "3.0.0",
+      info: {
+        title: "Vibe Chats API",
+        version: "1.0.0",
+        description: "This is the API documentation for Vibe Chats web-application.",
+      },
+      components: {
+        securitySchemes: {
+          BearerAdminAuth:{
+              type:"http",
+              scheme:"bearer",
+              bearerFormat:"JWT"
+          }
+        },
+      },
+      servers: [
         {
-            name: "Users",
-            description: "User routes",
+          url:hostName
         },
-    ],
-    securityDefinitions: {
-        authToken: {
-            type: "apiKey",
-            in: "header",
-            name: "Authorization",
-            description: "Enter valid authorization token. Like: Bearer Token",
-        },
+      ],
     },
-};
+    apis: ["./routes/*.js"], // Path to the API routes to generate documentation from
+  };
 
 // Initialize Swagger
-const outputFile = "./swagger-output.json";
-const routes = ["./index.js"]; // Path to your route files
+const swaggerSpec = swaggerJsdoc(options);
 
-// Generate Swagger documentation
-swaggerAutoGen(outputFile, routes, doc).then(() => {
-    console.log("Swagger documentation generated successfully.");
-}).catch((err) => {
-    console.error("Error generating Swagger documentation:", err);
-});
+module.exports = swaggerSpec;
