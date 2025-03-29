@@ -13,7 +13,7 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
 const swaggerAuth = require("./middleware/swagger-auth")
 const swaggerCssOptions = {
-    customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.css'
+    customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.min.css'
 };
 // Serve Swagger UI
 app.use("/api-docs", swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerCssOptions ));
@@ -27,7 +27,7 @@ const port = process.env.PORT || 5000;
 // Redis
 const { createClient } =  require('redis');
 const redisClient = createClient({
-    username: process.env.REDIS_USERNAME || 'default',
+    username: 'default',
     password: process.env.REDIS_PASSWORD,
     socket: {
         host: 'redis-16398.crce182.ap-south-1-1.ec2.redns.redis-cloud.com',
