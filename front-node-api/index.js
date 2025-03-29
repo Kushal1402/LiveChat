@@ -12,11 +12,18 @@ require('./config/db')
 const swaggerUi = require("swagger-ui-express");
 const swaggerSpec = require("./swagger");
 const swaggerAuth = require("./middleware/swagger-auth")
+// const swaggerCssOptions = {
+//     customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.min.css'
+// };
 const swaggerCssOptions = {
-    customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.min.css'
+    customCssUrl: 'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.18.3/swagger-ui.min.css', // Corrected CSS URL
+    customJs: [
+        'https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.18.3/swagger-ui-bundle.js', // Corrected JS bundle URL
+        'https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.18.3/swagger-ui-standalone-preset.js' // Corrected JS standalone URL
+    ]
 };
 // Serve Swagger UI
-app.use("/api-docs", swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerCssOptions ));
+app.use("/api-docs", swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerCssOptions));
 
 // Connect Database
 mongoose.Promise = global.Promise;
@@ -25,7 +32,7 @@ mongoose.Promise = global.Promise;
 const port = process.env.PORT || 5000;
 
 // Redis
-const { createClient } =  require('redis');
+const { createClient } = require('redis');
 const redisClient = createClient({
     username: 'default',
     password: process.env.REDIS_PASSWORD,
