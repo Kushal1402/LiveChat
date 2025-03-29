@@ -3,6 +3,7 @@ import ChatSidebar from "@/components/chat-components/ChatSideBar"
 import ChatInput from "@/components/chat-components/ChatInput"
 import ChatMessages from "@/components/chat-components/ChatMessage"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import UserAvatar from "@/components/chat-components/UserAvatart"
 
 export default function ChatApplication() {
   // Sample users data
@@ -284,8 +285,6 @@ export default function ChatApplication() {
   }
 
   const handleSelectUser = (user) => {
-    console.log(user);
-
     // Check if the user already exists in our list
     const existingUserIndex = users.findIndex((u) => u.id === user.id)
 
@@ -316,7 +315,7 @@ export default function ChatApplication() {
           <>
             <div className="flex items-center p-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800">
               <div className="flex items-center">
-                <div className="relative">
+                {/* <div className="relative">
                   <Avatar className="w-10 h-10">
                     <AvatarImage
                       src={selectedUser.avatar}
@@ -331,7 +330,8 @@ export default function ChatApplication() {
                     className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${selectedUser.status === "online" ? "bg-green-500" : "bg-gray-400"
                       }`}
                   ></span>
-                </div>
+                </div> */}
+                <UserAvatar user={selectedUser} size="lg" />
                 <div className="ml-3">
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{selectedUser.name}</h2>
                   <p className="text-sm text-gray-500 dark:text-gray-400">

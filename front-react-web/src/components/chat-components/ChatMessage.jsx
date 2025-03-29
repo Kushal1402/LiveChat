@@ -3,7 +3,7 @@ import { format } from "date-fns"
 // Import Avatar components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import UserAvatar from "./UserAvatart"
-
+import { TbChecks, TbCheck } from "react-icons/tb";
 
 export default function ChatMessages({ messages, currentUser }) {
   const messagesEndRef = useRef(null)
@@ -61,22 +61,24 @@ export default function ChatMessages({ messages, currentUser }) {
                 </div>
               )}
               <div
-                className={`max-w-[70%] ${
-                  message.userId === "me"
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                } rounded-lg p-3 shadow`}
+                className={`max-w-[70%] ${message.userId === "me"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  } rounded-lg p-3 shadow`}
               >
                 <p>{message.text}</p>
-                <div
-                  className={`text-xs mt-1 ${
-                    message.userId === "me" ? "text-primary-foreground/80" : "text-gray-500 dark:text-gray-400"
-                  } flex items-center`}
-                >
+
+                {/* Time & Ticks shifted to the right */}
+                <div className="text-xs mt-1 flex items-center ml-auto justify-end">
                   {formatMessageTime(message.timestamp)}
-                  {message.userId === "me" && <span className="ml-1">{message.isRead ? "✓✓" : "✓"}</span>}
+                  {message.userId === "me" && (
+                    <span className="ml-1">
+                      {message.isRead ? <TbChecks className="w-4 h-4 text-blue-500" /> : <TbCheck className="text-gray-500 w-4 h-4" />}
+                    </span>
+                  )}
                 </div>
               </div>
+
               {message.userId === "me" && (
                 <div className="ml-2 mt-1">
                   <Avatar>

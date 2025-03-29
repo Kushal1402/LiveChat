@@ -16,7 +16,7 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
     name: "John Doe",
     email: "john.doe@example.com",
     avatar: "/placeholder.svg?height=40&width=40",
-    status: "online" ,
+    status: "online",
   }
 
   const handleAddNewUser = (user) => {
@@ -53,10 +53,10 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
               <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser.email}</p>
             </div>
           </div>
-          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsProfileUpdateOpen(true)}>
-            <Edit2 className="h-4 w-4" />
-            <span className="sr-only">Edit Profile</span>
+          <Button size="icon" variant="ghost" className="h-10 w-10" onClick={() => setIsProfileUpdateOpen(true)}>
+            <Settings style={{ width: "20px", height: "20px" }} />
           </Button>
+
         </div>
       </div>
 
@@ -65,9 +65,9 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Messages</h1>
           <div className="flex">
-            <Button size="icon" variant="ghost" className="h-8 w-8">
+            {/* <Button size="icon" variant="ghost" className="h-8 w-8">
               <Settings className="h-4 w-4" />
-            </Button>
+            </Button> */}
             <Button size="icon" variant="ghost" className="h-8 w-8 ml-1" onClick={() => setIsNewConversationOpen(true)}>
               <Plus className="h-4 w-4" />
             </Button>
@@ -88,9 +88,8 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
         {users.map((user) => (
           <div
             key={user.id}
-            className={`flex items-center p-4 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 ${
-              selectedUser?.id === user.id ? "bg-gray-100 dark:bg-gray-700" : ""
-            }`}
+            className={`flex items-center p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${selectedUser?.id === user.id ? "bg-gray-200 dark:bg-gray-700" : ""
+              }`}
             onClick={() => onSelectUser(user)}
           >
             <UserAvatar user={user} />
