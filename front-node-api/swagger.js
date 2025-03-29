@@ -31,7 +31,7 @@ const doc = {
 
 // Initialize Swagger
 const outputFile = "./swagger-output.json";
-const routes = ["./server.js"]; // Path to your route files
+const routes = ["./index.js"]; // Path to your route files
 
 // Generate Swagger documentation
 swaggerAutoGen(outputFile, routes, doc).then(() => {
