@@ -29,18 +29,6 @@ const GuestController = require("../../controllers/guest/guest");
  *                 type: string
  *                 description: "Password"
  *                 example: "John@123"
- *               confirm_password:
- *                 type: string
- *                 description: "Confirm password - same as password" 
- *                 example: "John@123"
- *               token:
- *                 type: string
- *                 description: "The unique string from send_mail API"
- *                 example: "9iwowGGsRqqMeUmQYx1pmEg5g3Y58cPqMAKVREnOr3HfhimlQEUrOlbr"
- *               otp:
- *                 type: string
- *                 description: "Otp from the mail"
- *                 example: "123456"
  *     responses:
  *       500:
  *         description: Server error.
@@ -119,6 +107,16 @@ router.post("/register", GuestController.register);
  *                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2OGUzNjJmNjExMzliZjNjYmE1NmYzMSIsInJvbGUiOiI2Njk2MGNmMGRlMTNmOTFhM2NhMmJlN2MiLCJ2ZXJzaW9uIjoxMCwiaWF0IjoxNzQyMjkzMDc0LCJleHAiOjE3NDMxNTcwNzR9.MbzTFmepgsaC5yL2LxCcYTq4e8IMiTXL3hyuX-XsnfY
  *                 result:
  *                    type: object
+ *       307:
+ *         description: Temporary Redirect
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example : 2FA authentication is on!
  */
 router.post("/login", GuestController.login);
 
@@ -198,6 +196,14 @@ router.post("/send_mail", GuestController.send_mail);
  *                 type: integer
  *                 description: otp shared on mail.
  *                 example: 123456
+ *               email:
+ *                 type: string
+ *                 description: The email address to send the email to.
+ *                 example: "user@gmail.com"
+ *               request_type:
+ *                 type: integer
+ *                 description: The type of mail request.
+ *                 example: 1
  *     responses:
  *       500:
  *         description: Server error.

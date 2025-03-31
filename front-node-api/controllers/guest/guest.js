@@ -23,7 +23,6 @@ exports.register = async (req, res, next) => {
     username: "required|maxLength:25",
     email: "required|maxLength:50",
     password: "required|minLength:6",
-    confirm_password: 'required|minLength:6|same:password',
   });
   const matched = await objValidation.check();
 
@@ -132,7 +131,7 @@ exports.login = async (req, res, next) => {
 
     if (user_details.two_factor_authentication) {
       return res.status(307).json({
-        message: "Two authentication is on!"
+        message: "2FA authentication is on!"
       });
     };
 
@@ -165,7 +164,7 @@ exports.send_mail = async (req, res, next) => {
 
   const objValidation = new niv.Validator(req.body, {
     email: "required|email",
-    request_type: "required|in:1,2", // 1 = register, 2 = change-pass
+    request_type: "required|in:1,2", // 1 = register, 2 = change-pass, 3 = 2fa login
     resend: "required|in:1,2", // 1 = send 2 = resend
   });
   const matched = await objValidation.check();
@@ -202,6 +201,7 @@ exports.send_mail = async (req, res, next) => {
 
       const SaveOtp = await TwoFactorAuthenticationModel({
         token: token,
+        email: email,
         code: otp
       });
       await SaveOtp.save();
@@ -216,7 +216,40 @@ exports.send_mail = async (req, res, next) => {
         message: message,
         token: token,
       });
-    }
+    };
+
+    if (request_type === 3 && email) {
+
+      // Check if email already exists
+      let checkUserEmail = await UserModel.findOne({
+        email: {
+          $regex: email,
+          $options: "i",
+        },
+      });
+      if (checkUserEmail && checkUserEmail.two_factor_authentication === true) {
+
+        const SaveOtp = await TwoFactorAuthenticationModel({
+          token: token,
+          email: email,
+          code: otp
+        });
+        await SaveOtp.save();
+
+        subject = "Vibe Chats - Login Verification"
+
+        await SendMail.SendMail(email, subject, otp, 3);
+
+        if (resend === 2) {
+          message = "Verification code has been resent to your email address.";
+        };
+
+        return res.status(200).json({
+          message: message,
+          token: token,
+        });
+      };
+    };
   } catch (error) {
     next(error);
   }
@@ -227,7 +260,9 @@ exports.verify_otp = async (req, res, next) => {
 
   const ObjValidation = new niv.Validator(req.body, {
     token: "required",
-    otp: "required|maxLength:6"
+    otp: "required|maxLength:6",
+    request_type: "required",
+    email: "required",
   });
   const matched = await ObjValidation.check();
   if (!matched) {
@@ -242,6 +277,7 @@ exports.verify_otp = async (req, res, next) => {
   try {
     const checkOTP = await TwoFactorAuthenticationModel.findOne({
       token: token,
+      email: email,
       code: otp,
     });
     if (checkOTP?.code !== Number(otp)) {
@@ -251,6 +287,56 @@ exports.verify_otp = async (req, res, next) => {
     }
 
     await deleteOTP(token, otp);
+
+    if (request_type === 3) {
+
+      let user_data = await UserModel.aggregate([
+        {
+          $match: {
+            $expr: {
+              $eq: [{ $toLower: "$email" }, email.trim().toLowerCase()],
+            },
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            username: 1,
+            password: 1,
+            about: 1,
+            email: 1,
+            profile_picture: 1,
+            two_factor_authentication: 1,
+          }
+        }
+      ]);
+
+      let user_details = user_data[0];
+      if (user_details === null || user_details === undefined) {
+        return res.status(406).json({
+          message: "No record found with this email address",
+        });
+      };
+
+      const auth_token = await jwtr.sign(
+        {
+          email: user_details?.email,
+          id: user_details?._id,
+        },
+        process.env.JWT_KEY,
+        {
+          expiresIn: "2d",
+        }
+      );
+
+      if (user_details) delete user_details.password;
+
+      return res.status(200).json({
+        message: "User verified & logged in successfully.",
+        token: auth_token,
+        result: user_details
+      });
+    }
 
     return res.status(200).json({ message: "Verification code has been successfully verified" });
   } catch (error) {

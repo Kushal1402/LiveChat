@@ -6,6 +6,10 @@ const TwoFactorAuthenticationSchema = mongoose.Schema(
       type: String,
       require: true
     },
+    email: {
+      type: String,
+      require: true
+    },
     code: {
       type: Number,
       require: true
