@@ -8,8 +8,25 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Link, useNavigate } from "react-router"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { dispatch } from "@/store/store"
+import { login, selectAuthLoading } from "@/store/slices/authSlice"
+import { useToast } from "@/hooks/use-toast"
+import { useSelector } from "react-redux"
+import { ReloadIcon } from "@radix-ui/react-icons"
+
+const formSchema = z.object({
+    email: z.string().email({
+        message: "Please enter a valid email address.",
+    }),
+    password: z.string().min(6, {
+        message: "Password must be at least 6 characters.",
+    }),
+});
 
 export function LoginForm({
     className,
@@ -17,6 +34,56 @@ export function LoginForm({
 }) {
 
     const navigate = useNavigate()
+    const { toast } = useToast()
+
+    const isLoading = useSelector(selectAuthLoading)
+
+    const form = useForm({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            email: "@mailinator.com",
+            password: "",
+        },
+    })
+
+    const handleLogin = async (values) => {
+        try {
+            const res = await dispatch(login(values)).unwrap();
+            if (res.status === 307) {
+                try {
+                    await dispatch(sendMail({
+                        email: values.email,
+                        request_type: 3,
+                        resend: 1
+                    })).unwrap();
+
+                    navigate('/otp-verification');
+                } catch (error) {
+                    console.log(error);
+                    toast({
+                        title: "Error",
+                        description: error.message || "Failed to send OTP",
+                        variant: "destructive"
+                    });
+                }
+            } else {
+                toast({
+                    title: "Login Sucess",
+                    description: res.message || "Login Success ",
+                });
+                navigate('/chat');
+            }
+
+        } catch (error) {
+            toast({
+                title: "Error",
+                description: error || "Failed to send OTP",
+                variant: "destructive"
+            });
+        }
+
+
+    }
     return (
         <div className={cn("flex flex-col gap-6", className)} {...props}>
             <Card>
@@ -27,50 +94,79 @@ export function LoginForm({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-
-                    <form noValidate onSubmit={(e) => {
-                        e.preventDefault();  // Prevent default form submission
-                        navigate("/chat");   // Programmatic navigation
-
-                    }}>
-                        <div className="flex flex-col gap-6">
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email</Label>
-                                <Input
-                                    id="email"
-                                    type="email"
-                                    placeholder="m@example.com"
-                                    required
+                    <Form {...form}>
+                        <form noValidate onSubmit={form.handleSubmit(handleLogin)}>
+                            <div className="flex flex-col gap-6">
+                                <FormField
+                                    control={form.control}
+                                    name="email"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel style={{ color: 'inherit' }}>Email</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Enter your email" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
                                 />
+                                <FormField
+                                    control={form.control}
+                                    name="password"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel style={{ color: 'inherit' }}>Password</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="password"
+                                                    placeholder="Enter password"
+                                                    {...field}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button
+                                    type="submit"
+                                    className="w-full"
+                                    disabled={isLoading}
+                                >
+                                    {isLoading ? (
+                                        <div className="flex items-center gap-2">
+                                            <ReloadIcon className="h-4 w-4 animate-spin" />
+                                        </div>
+                                    ) : (
+                                        "Login"
+                                    )}
+                                </Button>
+                                {/* <Button variant="outline" className="w-full">
+                                    Login with Google
+                                </Button> */}
                             </div>
-                            <div className="grid gap-2">
-                                <div className="flex items-center">
-                                    <Label htmlFor="password">Password</Label>
-                                    <a
-                                        href="#"
-                                        className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
-                                    >
-                                        Forgot your password?
-                                    </a>
-                                </div>
-                                <Input id="password" type="password" required />
+                            <div className="mt-4 text-center text-sm">
+                                Don't have an account?{" "}
+                                <Link
+                                    to="/register"
+                                    className={cn(
+                                        "text-primary hover:underline",
+                                        isLoading && "text-muted-foreground cursor-not-allowed pointer-events-none"
+                                    )}
+                                    onClick={(e) => {
+                                        if (isLoading) {
+                                            e.preventDefault();
+                                        }
+                                    }}
+                                >
+                                    Sign up
+                                </Link>
+
                             </div>
-                            <Button className="w-full">
-                                Login
-                            </Button>
-                            <Button variant="outline" className="w-full">
-                                Login with Google
-                            </Button>
-                        </div>
-                        <div className="mt-4 text-center text-sm">
-                            Don't have an account?{" "}
-                            <Link to="/register" className="underline underline-offset-4">
-                                Sign up
-                            </Link>
-                        </div>
-                    </form>
+                        </form>
+                    </Form>
                 </CardContent>
             </Card>
         </div>
     )
 }
+

@@ -2,6 +2,7 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils";
 import {
   Form,
   FormControl,
@@ -15,8 +16,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/hooks/use-toast"
 
 import { Link, useNavigate } from "react-router-dom"
-import { sendMail } from "@/store/slices/authSlice"
 import { dispatch } from "@/store/store"
+import { useSelector } from "react-redux"
+import { sendMail, setFlowType, setTempUserData } from "@/store/slices/authSlice";
+// icons
+import { ReloadIcon } from "@radix-ui/react-icons";
+import { selectIsSendingMail, selectRequiresOTP } from "@/store/slices/authSlice";
+import { useEffect } from "react";
 
 const formSchema = z.object({
   username: z.string().min(2, {
@@ -39,6 +45,14 @@ const formSchema = z.object({
 const RegisterForm = () => {
   const navigate = useNavigate()
   const { toast } = useToast()
+  const isSendingMail = useSelector(selectIsSendingMail)
+  const requiresOTP = useSelector(selectRequiresOTP)
+
+  useEffect(() => {
+    if (requiresOTP) {
+      navigate('/otp-verification');
+    }
+  }, [requiresOTP, navigate]);
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -50,45 +64,22 @@ const RegisterForm = () => {
     },
   })
 
-
-
-  function onSubmit(values) {
+  const onSubmit = async (values) => {
     try {
-      // Replace with actual API call
-      console.log("Registration data:", JSON.stringify(values, null, 2))
-      dispatch(sendMail({
+      dispatch(setFlowType('register'))
+      dispatch(setTempUserData(values)); // name, email, password, c-password
+      await dispatch(sendMail({
         email: values.email,
         request_type: 1,
         resend: 1
-      }))
-        .unwrap()
-        .then((res) => {
-          navigate('/otp-verification', { state: { ...values, token: res?.token, type : 1 } })
-          toast({
-            title: "Mail send !",
-            description: res?.message,
-          });
-        })
-        .catch((error) => {
-          toast({
-            title: "Error",
-            description: error || "Something went wrong. Please try again.",
-            variant: "destructive",
-          });
-        });
-      // toast({
-      //   title: "Registration successful!",
-      //   description: "You can now login to your account.",
-      // })
-      // form.reset();
+      })).unwrap()
+      navigate('/otp-verification')
     } catch (error) {
-      console.log(error);
-
       toast({
-        title: "Registration failed",
-        description: "Please try again later.",
-        variant: "destructive",
-      })
+        title: "Error",
+        description: error || "Failed to send OTP",
+        variant: "destructive"
+      });
     }
   }
 
@@ -169,13 +160,35 @@ const RegisterForm = () => {
                 )}
               />
 
-              <Button type="submit" className="w-full">
-                Register
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={isSendingMail}
+              >
+                {isSendingMail ? (
+                  <div className="flex items-center gap-2">
+                    <ReloadIcon className="h-4 w-4 animate-spin" />
+                    Sending OTP...
+                  </div>
+                ) : (
+                  "Register"
+                )}
               </Button>
 
               <div className="mt-4 text-center text-sm">
                 Already have an account?{" "}
-                <Link to="/login" className="text-primary hover:underline">
+                <Link
+                  to="/login"
+                  className={cn(
+                    "text-primary hover:underline",
+                    isSendingMail && "text-muted-foreground cursor-not-allowed pointer-events-none"
+                  )}
+                  onClick={(e) => {
+                    if (isSendingMail) {
+                      e.preventDefault();
+                    }
+                  }}
+                >
                   Login here
                 </Link>
               </div>

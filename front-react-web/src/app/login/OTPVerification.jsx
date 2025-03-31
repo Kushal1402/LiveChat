@@ -7,98 +7,76 @@ import {
   InputOTPGroup,
   InputOTPSlot
 } from "@/components/ui/input-otp"
-import { useLocation, useNavigate } from "react-router"
+import { useNavigate } from "react-router"
 import { register, sendMail, verifyOTP } from "@/store/slices/authSlice"
-import { useDispatch } from "react-redux"
-
+import { useDispatch, useSelector } from "react-redux"
+import {
+  selectFlowType,
+  selectTempEmail,
+  selectTempUserData,
+  selectTempToken,
+  selectIsVerifyingOTP
+} from "@/store/slices/authSlice";
 
 const OTPVerification = () => {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const { toast } = useToast()
+
+  const flowType = useSelector(selectFlowType);
+  const tempEmail = useSelector(selectTempEmail);
+  const tempUserData = useSelector(selectTempUserData);
+  const tempToken = useSelector(selectTempToken);
+  const isVerifyingOtp = useSelector(selectIsVerifyingOTP)
+
   const [otp, setOtp] = useState('')
   const [timeLeft, setTimeLeft] = useState(10)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [otpToken, setOtpToken] = useState(null)
-  const { toast } = useToast()
-  const dispatch = useDispatch()
 
-  const location = useLocation()
-  console.log(location);
-
-  const navigate = useNavigate()
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    setIsSubmitting(true)
 
-    // Simulate API call
-    if (otp.length === 6) {
-      dispatch(verifyOTP({
-        token: otpToken || location.state.token,
+    try {
+      // Verify OTP
+      await dispatch(verifyOTP({
         otp,
-        request_type: location.state.type,
-        email : location.state.email
-      }))
-        .unwrap()
-        .then((res) => {
-          console.log(res);
-          setIsSubmitting
-          toast({
-            title: "Success",
-            description: res?.message,
-            variant: "default",
-          })
-          dispatch(register(
-            location.state
-          )).unwrap()
-            .then((res) => {
-              console.log(res);
-              setIsSubmitting
-            })
+        token: tempToken,
+        email: tempEmail,
+        request_type: flowType === 'register' ? 1 : 3,
+      })).unwrap();
 
-        })
-        .catch((error) => {
-          console.log(error);
-          setIsSubmitting
-          toast({
-            title: "Error",
-            description: error || "Something went wrong. Please try again.",
-            variant: "destructive",
-          });
-        });
-    } else {
+      // Handle flow-specific logic
+      if (flowType === 'register') {
+        await dispatch(register(tempUserData)).unwrap();
+      }
+
+      navigate('/chat');
+    } catch (error) {
       toast({
         title: "Error",
-        description: "Please enter a valid 6-digit OTP",
-        variant: "destructive",
-      })
+        description: error || "Failed to send OTP",
+        variant: "destructive"
+      });
     }
-    setIsSubmitting(false)
 
   }
 
   // Handle resend OTP
-  const handleResend = () => {
+  const handleResend = async () => {
     setTimeLeft(60)
     setOtp("")
+    try {
+      const payload = {
+        email: tempEmail,
+        request_type: flowType === 'register' ? 1 : 3,
+        resend: 2
+      };
 
-    dispatch(sendMail({
-      email: location.state.email,
-      request_type: 1,
-      resend: 2
-    }))
-      .unwrap()
-      .then((res) => {
-        setOtpToken(res?.token)
-        toast({
-          title: "Mail Re-Send !",
-          description: res?.message,
-        });
-      })
-      .catch((error) => {
-        toast({
-          title: "Error",
-          description: error || "Something went wrong. Please try again.",
-          variant: "destructive",
-        });
-      });
+      await dispatch(sendMail(payload)).unwrap();
+      setTimeLeft(60);
+    } catch (error) {
+      // Handle error
+    }
+
   }
 
   // Countdown timer
@@ -152,9 +130,9 @@ const OTPVerification = () => {
             <Button
               type="submit"
               className="w-full"
-              disabled={otp.length !== 6 || isSubmitting}
+              disabled={otp.length !== 6 || isVerifyingOtp}
             >
-              {isSubmitting ? "Verifying..." : "Verify OTP"}
+              {isVerifyingOtp ? "Verifying..." : "Verify OTP"}
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">

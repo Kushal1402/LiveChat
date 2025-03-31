@@ -1,4 +1,3 @@
-// features/auth/authSlice.ts
 import apiClient from '@/utils/apiClient';
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 
@@ -6,74 +5,130 @@ export const login = createAsyncThunk(
     'auth/login',
     async (credentials, { rejectWithValue }) => {
         try {
-            const response = await apiClient.post('/auth/login', credentials);
-            return response.data;
+            const response = await apiClient.post('/guest/login', credentials);
+            return {
+                status: response.status,
+                token: response.data.token,
+                user: response.data.result,
+                ...response.data
+            };
         } catch (error) {
-            return rejectWithValue(error.response.data.message);
+            return rejectWithValue(error.response?.data?.message || 'Login failed');
         }
     }
 );
 
+// Register 
 export const register = createAsyncThunk(
     'auth/register',
     async (userData, { rejectWithValue }) => {
         try {
             const response = await apiClient.post('/guest/register', userData);
-            return response.data;
+            return {
+                user: response.data.result,
+                token: response.data.token
+            };
         } catch (error) {
-            return rejectWithValue(error.response.data.message);
+            return rejectWithValue(error.response?.data?.message || 'Registration failed');
         }
     }
 );
 
+// Verify OTP 
 export const verifyOTP = createAsyncThunk(
     'auth/verifyOTP',
-    async (otpData, { rejectWithValue }) => {
+    async (otpData, { rejectWithValue, getState }) => {
         try {
             const response = await apiClient.post('/guest/verify_otp', otpData);
-            console.log(response);            
-            return response.data;
+            const state = getState().auth;
+
+            // Return different payloads based on flow
+            return {
+                ...response.data,
+                flowType: state.flowType // Include flowType in response
+            };
         } catch (error) {
-            return rejectWithValue(error.response.data.message);
+            return rejectWithValue(error.response?.data?.message || 'OTP verification failed');
         }
     }
 );
 
+// Send Mail 
 export const sendMail = createAsyncThunk(
     'auth/sendMail',
     async (userData, { rejectWithValue }) => {
         try {
             const response = await apiClient.post('/guest/send_mail', userData);
-            return response.data;
+            return {
+                token: response.data.token,
+                message: response.data.message
+            };
         } catch (error) {
-            return rejectWithValue(error.response.data.message);
+            return rejectWithValue(error.response?.data?.message || 'Failed to send email');
         }
     }
 );
 
+
 const initialState = {
     user: null,
-    tokens: null,
+    token: null,
     isLoading: false,
-    isRegistering: false,
+    isSendingMail: false,
     isVerifyingOTP: false,
     error: null,
-  };
+    requiresOTP: false,
+    tempToken: null,
+    tempEmail: null,
+    tempUserData: null,
+    flowType: null
+};
+
 const authSlice = createSlice({
     name: 'auth',
     initialState,
     reducers: {
+        clearTempData: (state) => {
+            state.tempToken = null;
+            state.tempEmail = null;
+            state.tempUserData = null;
+            state.requiresOTP = false;
+            state.flowType = null;
+        },
+        setTempUserData: (state, action) => {
+            state.tempUserData = action.payload;
+        },
+        setFlowType: (state, action) => {
+            state.flowType = action.payload;
+        },
         logout: (state) => {
             state.user = null;
-            state.tokens = null;
+            state.token = null;
             state.error = null;
-            // Clear tokens from localStorage
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('vibe-token');
         },
     },
     extraReducers: (builder) => {
         builder
+            // Send Mail (OTP)
+            .addCase(sendMail.pending, (state) => {
+                state.isSendingMail = true;
+                state.error = null;
+            })
+            .addCase(sendMail.fulfilled, (state, action) => {
+                state.isSendingMail = false;
+                state.tempToken = action.payload.token;
+                // Set temp email based on flow type
+                if (state.flowType === 'register') {
+                    state.tempEmail = state.tempUserData?.email;
+                    state.requiresOTP = true;
+                }
+            })
+            .addCase(sendMail.rejected, (state, action) => {
+                state.isSendingMail = false;
+                state.error = action.payload;
+            })
+
             // Login
             .addCase(login.pending, (state) => {
                 state.isLoading = true;
@@ -81,38 +136,75 @@ const authSlice = createSlice({
             })
             .addCase(login.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.user = action.payload.user;
-                state.tokens = action.payload.tokens;
-                // Store tokens in localStorage
-                localStorage.setItem('accessToken', action.payload.tokens.accessToken);
-                localStorage.setItem('refreshToken', action.payload.tokens.refreshToken);
+                if (action.payload.status === 307) {
+                    state.requiresOTP = true;
+                    state.tempToken = action.payload.token;
+                    state.tempEmail = action.meta.arg.email;
+                    state.flowType = 'login';
+                } else {
+                    state.user = action.payload.user;
+                    state.token = action.payload.token;
+                    localStorage.setItem('vibe-token', action.payload.token);
+                    state.requiresOTP = false;
+                }
             })
             .addCase(login.rejected, (state, action) => {
                 state.isLoading = false;
-                state.error = action.payload
+                state.error = action.payload;
             })
 
-            // Registration
-            .addCase(register.pending, (state) => {
-                state.isRegistering = true;
+            // Verify OTP
+            .addCase(verifyOTP.pending, (state) => {
+                state.isVerifyingOTP = true;
                 state.error = null;
             })
-            .addCase(register.fulfilled, (state) => {
-                state.isRegistering = false;
+            .addCase(verifyOTP.fulfilled, (state, action) => {
+                state.isVerifyingOTP = false;
+                if (state.flowType === 'login') {
+                    state.user = action.payload.result;
+                    state.token = action.payload.token;
+                    localStorage.setItem('vibe-token', action.payload.token);
+                }
+                state.requiresOTP = false;
+            })
+            .addCase(verifyOTP.rejected, (state, action) => {
+                state.isVerifyingOTP = false;
+                state.error = action.payload;
+            })
+
+            // Register
+            .addCase(register.pending, (state) => {
+                state.isLoading = true;
+                state.error = null;
+            })
+            .addCase(register.fulfilled, (state, action) => {
+                state.isLoading = false;
+                state.user = action.payload.user;
+                state.token = action.payload.token;
+                localStorage.setItem('accessToken', action.payload.token.accessToken);
+                localStorage.setItem('refreshToken', action.payload.token.refreshToken);
+                state.tempUserData = null;
+                state.flowType = null;
+                state.requiresOTP = false
             })
             .addCase(register.rejected, (state, action) => {
-                state.isRegistering = false;
-                state.error = action.payload
-            })
-
-           
-    },
+                state.isLoading = false;
+                state.error = action.payload;
+            });
+    }
 });
 
-export const { logout } = authSlice.actions;
+export const { clearTempData, setTempUserData, setFlowType, logout } = authSlice.actions;
 export default authSlice.reducer;
 
-// Selectors
+// Selectors (export all used in components)
 export const selectCurrentUser = (state) => state.auth.user;
 export const selectAuthLoading = (state) => state.auth.isLoading;
 export const selectAuthError = (state) => state.auth.error;
+export const selectTempEmail = (state) => state.auth.tempEmail;
+export const selectFlowType = (state) => state.auth.flowType;
+export const selectIsSendingMail = (state) => state.auth.isSendingMail;
+export const selectIsVerifyingOTP = (state) => state.auth.isVerifyingOTP;
+export const selectRequiresOTP = (state) => state.auth.requiresOTP;
+export const selectTempToken = (state) => state.auth.tempToken;
+export const selectTempUserData = (state) => state.auth.tempUserData;
