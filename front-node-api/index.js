@@ -20,7 +20,8 @@ const swaggerCssOptions = {
     customJs: [
         'https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.18.3/swagger-ui-bundle.js', // Corrected JS bundle URL
         'https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.18.3/swagger-ui-standalone-preset.js' // Corrected JS standalone URL
-    ]
+    ],
+    customfavIcon: 'https://raw.githubusercontent.com/Kushal1402/LiveChat/develop/front-node-api/static_assets/vibe_chats.png'
 };
 // Serve Swagger UI
 app.use("/api-docs", swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerCssOptions));
@@ -54,6 +55,13 @@ redisClient.on("error", (err) => console.error("Redis Client Error:", err));
 })();
 global.redisClient = redisClient;
 
+
+// Guest Routes
+const GuestRoutes = require('./routes/guest/guest');
+
+// User Routes
+const UserRoutes = require('./routes/user/user');
+
 app.use(cors({ origin: "*", credentials: true }));
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -69,6 +77,10 @@ app.use((req, res, next) => {
     }
     next();
 });
+
+app.use("/api/guest", GuestRoutes);
+
+app.use("/api/user", UserRoutes);
 
 // Base Route
 app.get("/", (req, res) => {
