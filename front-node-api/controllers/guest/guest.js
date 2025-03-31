@@ -272,7 +272,7 @@ exports.verify_otp = async (req, res, next) => {
     });
   }
 
-  const { token, otp } = req.body;
+  const { email, token, otp } = req.body;
 
   try {
     const checkOTP = await TwoFactorAuthenticationModel.findOne({

@@ -20,7 +20,8 @@ const swaggerCssOptions = {
     customJs: [
         'https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.18.3/swagger-ui-bundle.js', // Corrected JS bundle URL
         'https://cdn.jsdelivr.net/npm/swagger-ui-dist@4.18.3/swagger-ui-standalone-preset.js' // Corrected JS standalone URL
-    ]
+    ],
+    customfavIcon: 'https://raw.githubusercontent.com/Kushal1402/LiveChat/develop/front-node-api/static_assets/vibe_chats.png'
 };
 // Serve Swagger UI
 app.use("/api-docs", swaggerAuth, swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerCssOptions));
