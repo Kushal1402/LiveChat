@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useNavigate } from "react-router"
+import { Link, useNavigate } from "react-router"
 
 export function LoginForm({
     className,
@@ -27,7 +27,12 @@ export function LoginForm({
                     </CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <form noValidate>
+
+                    <form noValidate onSubmit={(e) => {
+                        e.preventDefault();  // Prevent default form submission
+                        navigate("/chat");   // Programmatic navigation
+
+                    }}>
                         <div className="flex flex-col gap-6">
                             <div className="grid gap-2">
                                 <Label htmlFor="email">Email</Label>
@@ -50,7 +55,7 @@ export function LoginForm({
                                 </div>
                                 <Input id="password" type="password" required />
                             </div>
-                            <Button type="submit" className="w-full" onClick={() => navigate({ pathname: "/chat" }) }>
+                            <Button className="w-full">
                                 Login
                             </Button>
                             <Button variant="outline" className="w-full">
@@ -58,10 +63,10 @@ export function LoginForm({
                             </Button>
                         </div>
                         <div className="mt-4 text-center text-sm">
-                            Don&apos;t have an account?{" "}
-                            <a href="#" className="underline underline-offset-4">
+                            Don't have an account?{" "}
+                            <Link to="/register" className="underline underline-offset-4">
                                 Sign up
-                            </a>
+                            </Link>
                         </div>
                     </form>
                 </CardContent>
