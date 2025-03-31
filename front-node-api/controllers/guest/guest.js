@@ -237,6 +237,8 @@ exports.verify_otp = async (req, res, next) => {
     });
   }
 
+  const { token, otp } = req.body;
+
   try {
     const checkOTP = await TwoFactorAuthenticationModel.findOne({
       token: token,
@@ -255,7 +257,6 @@ exports.verify_otp = async (req, res, next) => {
     next(error);
   }
 }
-
 
 // Delete Otp after register user, 2fa login or change-pass
 const deleteOTP = async (token, code) => {

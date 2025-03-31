@@ -37,7 +37,7 @@ exports.SendMail = async (to, subject, data, type) => {
 
 const TwoFactorAuthMailTemplate = (data) => {
   // console.log("Otp : ", data)
-  let logo = 'https://raw.githubusercontent.com/Kushal1402/LiveChat/develop/node-api/static_assets/vibe_chats.png';
+  let logo = 'https://raw.githubusercontent.com/Kushal1402/LiveChat/develop/front-node-api/static_assets/vibe_chats.png';
   let otp = data;
 
   let emailBody = `
