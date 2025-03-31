@@ -1,5 +1,7 @@
 const swaggerJsdoc = require("swagger-jsdoc");
-const hostName = process.env.SITE_URL;
+const path = require('path');
+
+const hostName = process.env.SITE_URL || "https://vibe-chats-backend.vercel.app/";
 
 // Swagger options
 const options = {
@@ -25,7 +27,7 @@ const options = {
         },
       ],
     },
-    apis: ["./routes/**/*.js"], // Path to the API routes to generate documentation from
+    apis: [path.join(__dirname, './routes/**/*.js')]  // Path to the API routes to generate documentation from
   };
 
 // Initialize Swagger
