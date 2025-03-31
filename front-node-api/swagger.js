@@ -25,7 +25,7 @@ const options = {
         },
       ],
     },
-    apis: ["./routes/*.js"], // Path to the API routes to generate documentation from
+    apis: ["./routes/**/*.js"], // Path to the API routes to generate documentation from
   };
 
 // Initialize Swagger
