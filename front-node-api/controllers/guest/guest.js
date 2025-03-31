@@ -24,8 +24,6 @@ exports.register = async (req, res, next) => {
     email: "required|maxLength:50",
     password: "required|minLength:6",
     confirm_password: 'required|minLength:6|same:password',
-    token: "required",
-    otp: "required|maxLength:6"
   });
   const matched = await objValidation.check();
 
@@ -36,20 +34,9 @@ exports.register = async (req, res, next) => {
     });
   }
 
-  const { username, email, password, token, otp } = req.body;
+  const { username, email, password } = req.body;
 
   try {
-
-    // Check if Otp & Token is matching for register
-    const verificationOtp = await TwoFactorAuthenticationModel.findOne({
-      token: token,
-      code: otp,
-    });
-    if (!verificationOtp) {
-      return res.status(401).json({
-        message: "Invalid verification code",
-      });
-    }
 
     let hash = "";
     if (password) {
@@ -64,8 +51,6 @@ exports.register = async (req, res, next) => {
 
     const UserSave = new UserModel(UserObj);
     const result = await UserSave.save();
-
-    await deleteOTP(token, otp);
 
     const auth_token = await jwtr.sign(
       {
@@ -236,6 +221,41 @@ exports.send_mail = async (req, res, next) => {
     next(error);
   }
 };
+
+// Verify Otp code
+exports.verify_otp = async (req, res, next) => {
+
+  const ObjValidation = new niv.Validator(req.body, {
+    token: "required",
+    otp: "required|maxLength:6"
+  });
+  const matched = await ObjValidation.check();
+  if (!matched) {
+    return res.status(422).json({
+      message: "validation error",
+      error: ObjValidation.errors,
+    });
+  }
+
+  try {
+    const checkOTP = await TwoFactorAuthenticationModel.findOne({
+      token: token,
+      code: otp,
+    });
+    if (checkOTP?.code !== Number(otp)) {
+      return res.status(402).json({
+        message: "Invalid verification code. Please re-enter.",
+      });
+    }
+
+    await deleteOTP(token, otp);
+
+    return res.status(200).json({ message: "Verification code has been successfully verified" });
+  } catch (error) {
+    next(error);
+  }
+}
+
 
 // Delete Otp after register user, 2fa login or change-pass
 const deleteOTP = async (token, code) => {

@@ -37,7 +37,7 @@ exports.SendMail = async (to, subject, data, type) => {
 
 const TwoFactorAuthMailTemplate = (data) => {
   // console.log("Otp : ", data)
-  let logo = 'https://github.com/fluidicon.png';
+  let logo = 'https://raw.githubusercontent.com/Kushal1402/LiveChat/develop/node-api/static_assets/vibe_chats.png';
   let otp = data;
 
   let emailBody = `
@@ -114,11 +114,11 @@ const TwoFactorAuthMailTemplate = (data) => {
             <table border="0" bgcolor="#566DCB" cellpadding="0" cellspacing="0" width="100%">
 
                 <tr>
-                    <td bgcolor="#f5f5f5" align="center" style="padding-top: 30px; padding-bottom: 25px;">
-                        <h1 style="font-family: 'Rubik', sans-serif; font-size:40px; line-height:48px; color: #11181d; padding-bottom: 15px; margin: 0;">
+                    <td bgcolor="#f5f5f5" align="center" style="padding: 25px 0px;">
+                        <img src=${logo} width="70px" />
+                        <h1 style="font-family: 'Rubik', sans-serif; font-size:32px; line-height:48px; color: #11181d; margin: 0;">
                             Vibe Chats 
                         </h1>
-                        <!-- <img src=${logo} width="250px" /> -->
                     </td>
                 </tr> <!-- body content -->
                 <table border="0" cellpadding="0" cellspacing="0" width="100%">

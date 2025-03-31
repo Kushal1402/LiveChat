@@ -176,6 +176,50 @@ router.post("/login", GuestController.login);
  */
 router.post("/send_mail", GuestController.send_mail);
 
-// router.post("/verify_email", GuestController.verify_2FA);
+/** 
+ * @swagger
+ * /api/guest/verify_otp:
+ *   post:
+ *     summary: Verify Otp
+ *     description: This endpoint will verify the otp send to user email.
+ *     tags:
+ *       - Guest
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               token:
+ *                 type: string
+ *                 description: Token to verify same user
+ *               otp:
+ *                 type: integer
+ *                 description: otp shared on mail.
+ *                 example: 123456
+ *     responses:
+ *       500:
+ *         description: Server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred while sending the email. Please try again."
+ *       200:
+ *         description: OK.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example : Verification code has been successfully verified
+ */
+router.post("/verify_otp", GuestController.verify_otp);
 
 module.exports = router;
