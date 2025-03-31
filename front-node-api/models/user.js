@@ -22,10 +22,6 @@ const UserSchema = mongoose.Schema(
             type: String,
             required: true
         },
-        phone_number: {
-            type: String,
-            required: true
-        },
         profile_picture: {
             type: String,
             default: 'https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg'

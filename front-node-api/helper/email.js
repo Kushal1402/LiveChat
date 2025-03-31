@@ -3,9 +3,11 @@ require("dotenv").config();
 
 // send mail function
 exports.SendMail = async (to, subject, data, type) => {
-  // Type - 1 for 2fa mail
-  // Type - 2 for verification mail
-  // Type - 3 for forgot password mail
+  // Type - 1 for verification mail
+  // Type - 2 for forgot password mail
+  // Type - 3 for 2fa mail
+
+  if (type === 1) message = TwoFactorAuthMailTemplate(data);
   
   try {
 
@@ -25,6 +27,7 @@ exports.SendMail = async (to, subject, data, type) => {
       subject: subject,
       html: message,
     });
+    // console.log("info : ", info)
     return info;
   } catch (err) {
     console.log(err);
@@ -33,7 +36,9 @@ exports.SendMail = async (to, subject, data, type) => {
 };
 
 const TwoFactorAuthMailTemplate = (data) => {
+  // console.log("Otp : ", data)
   let logo = 'https://github.com/fluidicon.png';
+  let otp = data;
 
   let emailBody = `
   <!DOCTYPE html>

@@ -54,6 +54,13 @@ redisClient.on("error", (err) => console.error("Redis Client Error:", err));
 })();
 global.redisClient = redisClient;
 
+
+// Guest Routes
+const GuestRoutes = require('./routes/guest/guest');
+
+// User Routes
+const UserRoutes = require('./routes/user/user');
+
 app.use(cors({ origin: "*", credentials: true }));
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -69,6 +76,10 @@ app.use((req, res, next) => {
     }
     next();
 });
+
+app.use("/api/guest", GuestRoutes);
+
+app.use("/api/user", UserRoutes);
 
 // Base Route
 app.get("/", (req, res) => {
