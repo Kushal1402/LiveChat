@@ -8,7 +8,7 @@ import {
   InputOTPSlot
 } from "@/components/ui/input-otp"
 import { useNavigate } from "react-router"
-import { register, sendMail, verifyOTP } from "@/store/slices/authSlice"
+import { register, selectAuthLoading, sendMail, verifyOTP } from "@/store/slices/authSlice"
 import { useDispatch, useSelector } from "react-redux"
 import {
   selectFlowType,
@@ -17,6 +17,7 @@ import {
   selectTempToken,
   selectIsVerifyingOTP
 } from "@/store/slices/authSlice";
+import { ReloadIcon } from "@radix-ui/react-icons"
 
 const OTPVerification = () => {
   const dispatch = useDispatch()
@@ -28,6 +29,7 @@ const OTPVerification = () => {
   const tempUserData = useSelector(selectTempUserData);
   const tempToken = useSelector(selectTempToken);
   const isVerifyingOtp = useSelector(selectIsVerifyingOTP)
+  const isLoading = useSelector(selectAuthLoading);
 
   const [otp, setOtp] = useState('')
   const [timeLeft, setTimeLeft] = useState(10)
@@ -46,9 +48,24 @@ const OTPVerification = () => {
 
       // Handle flow-specific logic
       if (flowType === 'register') {
-        await dispatch(register(tempUserData)).unwrap();
+       try {
+         const res = await dispatch(register(tempUserData)).unwrap();
+         console.log(res);
+         toast({
+          title: "Registred ",
+          description: res?.message || "User Register Succesfully",
+        });
+       } catch (error) {
+        console.log(error);
+        
+        toast({
+          title: "Error",
+          description: "Faield to Register User",
+          variant: "destructive"
+        });
+       }
+        
       }
-
       navigate('/chat');
     } catch (error) {
       toast({
@@ -130,9 +147,18 @@ const OTPVerification = () => {
             <Button
               type="submit"
               className="w-full"
-              disabled={otp.length !== 6 || isVerifyingOtp}
+              disabled={otp.length !== 6 || isVerifyingOtp || isLoading}
             >
-              {isVerifyingOtp ? "Verifying..." : "Verify OTP"}
+              {isVerifyingOtp ? (
+                "Verifying..."
+              ) : isLoading && flowType === 'register' ? (
+                <div className="flex items-center gap-2">
+                  <ReloadIcon className="h-4 w-4 animate-spin" />
+                  Registering User...
+                </div>
+              ) : (
+                "Verify OTP"
+              )}
             </Button>
 
             <div className="text-center text-sm text-muted-foreground">

@@ -1,4 +1,3 @@
-// utils/apiClient.js
 import axios from 'axios';
 
 const apiClient = axios.create({
@@ -12,7 +11,7 @@ const apiClient = axios.create({
 // Request interceptor
 apiClient.interceptors.request.use(
     (config) => {
-        const token = localStorage.getItem('accessToken');
+        const token = localStorage.getItem('vibe-token');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -29,8 +28,7 @@ apiClient.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // Handle token expiration
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('refreshToken');
+            localStorage.removeItem('vibe-token');
             window.location.href = '/login';
         }
         return Promise.reject(error);

@@ -7,7 +7,15 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Camera } from "lucide-react"
-
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 export default function ProfileUpdateDialog({ isOpen, onClose, currentUser }) {
   const [profileData, setProfileData] = useState({
@@ -16,6 +24,7 @@ export default function ProfileUpdateDialog({ isOpen, onClose, currentUser }) {
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
+    status: currentUser.status || 'online'
   })
 
   const [avatarPreview, setAvatarPreview] = useState(currentUser.avatar)
@@ -109,6 +118,49 @@ export default function ProfileUpdateDialog({ isOpen, onClose, currentUser }) {
                 <Label htmlFor="name">Full Name</Label>
                 <Input id="name" name="name" value={profileData.name} onChange={handleInputChange} />
               </div>
+
+              {/* Status Dropdown */}
+              <div className="space-y-2">
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={profileData.status}
+                  onValueChange={(value) => setProfileData({ ...profileData, status: value })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>User Status</SelectLabel>
+                      <SelectItem value="online">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-green-500" />
+                          Online
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="away">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-yellow-500" />
+                          Away
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="busy">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-red-500" />
+                          Busy
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="offline">
+                        <div className="flex items-center gap-2">
+                          <span className="h-2 w-2 rounded-full bg-gray-500" />
+                          Offline
+                        </div>
+                      </SelectItem>
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+
 
               <Button onClick={handleProfileUpdate} className="w-full">
                 Update Profile

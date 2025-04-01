@@ -4,8 +4,15 @@ import ChatInput from "@/components/chat-components/ChatInput"
 import ChatMessages from "@/components/chat-components/ChatMessage"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import UserAvatar from "@/components/chat-components/UserAvatart"
+import { ArrowLeft, Menu } from "lucide-react"
+import { MobileDrawer } from "@/components/chat-components/MobileDrawer"
+import { useMobileView } from "@/hooks/use-mobile-view"
+import { Button } from "@/components/ui/button"
 
 export default function ChatApplication() {
+  const isMobile = useMobileView()
+  const [drawerOpen, setDrawerOpen] = useState(false)
+  const [showChat, setShowChat] = useState(false)
   // Sample users data
   const [users, setUsers] = useState([
     {
@@ -305,17 +312,89 @@ export default function ChatApplication() {
 
     setUsers(updatedUsers)
     setSelectedUser(user)
+
+    // For mobile: close drawer and show chat
+    if (isMobile) {
+      setDrawerOpen(false)
+      setShowChat(true)
+    }
   }
 
-  return (
-    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
-      <ChatSidebar users={users} selectedUser={selectedUser} onSelectUser={handleSelectUser} />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        {selectedUser ? (
-          <>
-            <div className="flex items-center p-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800">
-              <div className="flex items-center">
-                {/* <div className="relative">
+  // Handle back button on mobile
+  const handleBackToList = () => {
+    setShowChat(false)
+  }
+
+  // Render sidebar content (used in both desktop and mobile)
+  const sidebarContent = <ChatSidebar users={users} selectedUser={selectedUser} onSelectUser={handleSelectUser} />
+
+
+
+  // Render chat content (used in both desktop and mobile)
+  const chatContent = selectedUser ? (
+    <>
+      <div className="flex items-center p-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800">
+        {isMobile && (
+          <Button variant="ghost" size="icon" className="mr-2" onClick={handleBackToList}>
+            <ArrowLeft className="h-5 w-5" />
+            <span className="sr-only">Back</span>
+          </Button>
+        )}
+        <div className="flex items-center">
+          <UserAvatar user={selectedUser} size="lg" />
+          <div className="ml-3">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{selectedUser.name}</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {selectedUser.status === "online" ? "Online" : `Last seen ${selectedUser.lastSeen}`}
+            </p>
+          </div>
+        </div>
+      </div>
+      <ChatMessages
+        messages={messages.filter((m) => m.userId === selectedUser.id || m.userId === "me")}
+        currentUser={selectedUser}
+      />
+      <ChatInput onSendMessage={handleSendMessage} />
+    </>
+  ) : (
+    <div className="flex items-center justify-center h-full">
+      <p className="text-gray-500 dark:text-gray-400">Select a conversation to start chatting</p>
+    </div>
+  )
+
+
+  // Mobile view
+  if (isMobile) {
+    return (
+      <div className="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
+        {/* Mobile header when showing chat list */}
+        {!showChat && (
+          <div className="p-4 bg-white dark:bg-gray-800 border-b dark:border-gray-700 flex items-center justify-between">
+            <h1 className="text-xl font-bold">Messages</h1>
+            <Button variant="ghost" size="icon" onClick={() => setDrawerOpen(true)}>
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Menu</span>
+            </Button>
+          </div>
+        )}
+
+        {/* Mobile drawer for chat list */}
+        <MobileDrawer isOpen={drawerOpen} onClose={() => setDrawerOpen(false)}>
+          {sidebarContent}
+        </MobileDrawer>
+
+        {/* Show either chat list or selected chat */}
+        {showChat ? (
+          <div className="flex flex-col flex-1 overflow-hidden">{chatContent}</div>
+        ) : (
+          <div className="flex-1 overflow-y-auto p-4">
+            {users.map((user) => (
+              <div
+                key={user.id}
+                className="flex items-center p-4 mb-2 rounded-lg cursor-pointer hover:bg-white dark:hover:bg-gray-800 bg-white dark:bg-gray-800 shadow-sm"
+                onClick={() => handleSelectUser(user)}
+              >
+                <div className="relative">
                   <Avatar className="w-10 h-10">
                     <AvatarImage
                       src={selectedUser.avatar}
@@ -330,29 +409,81 @@ export default function ChatApplication() {
                     className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${selectedUser.status === "online" ? "bg-green-500" : "bg-gray-400"
                       }`}
                   ></span>
-                </div> */}
-                <UserAvatar user={selectedUser} size="lg" />
-                <div className="ml-3">
-                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{selectedUser.name}</h2>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    {selectedUser.status === "online" ? "Online" : `Last seen ${selectedUser.lastSeen}`}
-                  </p>
                 </div>
+                <div className="ml-3 flex-1 overflow-hidden">
+                  <div className="flex justify-between items-center">
+                    <h3 className="font-medium text-gray-900 dark:text-gray-100">{user.name}</h3>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{user.lastSeen}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
+                </div>
+                {user.unreadCount > 0 && (
+                  <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
+                    {user.unreadCount}
+                  </span>
+                )}
               </div>
-            </div>
-            <ChatMessages
-              messages={messages.filter((m) => m.userId === selectedUser.id || m.userId === "me")}
-              currentUser={selectedUser}
-            />
-            <ChatInput onSendMessage={handleSendMessage} />
-          </>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <p className="text-gray-500 dark:text-gray-400">Select a conversation to start chatting</p>
+            ))}
           </div>
         )}
       </div>
+    )
+  }
+
+  // Desktop view
+  return (
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+      {sidebarContent}
+      <div className="flex flex-col flex-1 overflow-hidden">{chatContent}</div>
     </div>
   )
+
+  // return (
+  //   <div className="flex h-screen bg-gray-100 dark:bg-gray-900">
+  //     <ChatSidebar users={users} selectedUser={selectedUser} onSelectUser={handleSelectUser} />
+  //     <div className="flex flex-col flex-1 overflow-hidden">
+  //       {selectedUser ? (
+  //         <>
+  //           <div className="flex items-center p-4 border-b dark:border-gray-700 bg-white dark:bg-gray-800">
+  //             <div className="flex items-center">
+  //               {/* <div className="relative">
+  //                 <Avatar className="w-10 h-10">
+  //                   <AvatarImage
+  //                     src={selectedUser.avatar}
+  //                     alt={selectedUser.name}
+  //                   />
+  //                   <AvatarFallback>
+  //                     {selectedUser.name.charAt(0)}
+  //                   </AvatarFallback>
+  //                 </Avatar>
+
+  //                 <span
+  //                   className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-gray-800 ${selectedUser.status === "online" ? "bg-green-500" : "bg-gray-400"
+  //                     }`}
+  //                 ></span>
+  //               </div> */}
+  //               <UserAvatar user={selectedUser} size="lg" />
+  //               <div className="ml-3">
+  //                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{selectedUser.name}</h2>
+  //                 <p className="text-sm text-gray-500 dark:text-gray-400">
+  //                   {selectedUser.status === "online" ? "Online" : `Last seen ${selectedUser.lastSeen}`}
+  //                 </p>
+  //               </div>
+  //             </div>
+  //           </div>
+  //           <ChatMessages
+  //             messages={messages.filter((m) => m.userId === selectedUser.id || m.userId === "me")}
+  //             currentUser={selectedUser}
+  //           />
+  //           <ChatInput onSendMessage={handleSendMessage} />
+  //         </>
+  //       ) : (
+  //         <div className="flex items-center justify-center h-full">
+  //           <p className="text-gray-500 dark:text-gray-400">Select a conversation to start chatting</p>
+  //         </div>
+  //       )}
+  //     </div>
+  //   </div>
+  // )
 }
 

@@ -22,7 +22,8 @@ import { sendMail, setFlowType, setTempUserData } from "@/store/slices/authSlice
 // icons
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { selectIsSendingMail, selectRequiresOTP } from "@/store/slices/authSlice";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Eye, EyeOff } from "lucide-react";
 
 const formSchema = z.object({
   username: z.string().min(2, {
@@ -48,11 +49,16 @@ const RegisterForm = () => {
   const isSendingMail = useSelector(selectIsSendingMail)
   const requiresOTP = useSelector(selectRequiresOTP)
 
-  useEffect(() => {
-    if (requiresOTP) {
-      navigate('/otp-verification');
-    }
-  }, [requiresOTP, navigate]);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(prevState => !prevState);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(prevState => !prevState);
+  };
 
   const form = useForm({
     resolver: zodResolver(formSchema),
@@ -130,11 +136,23 @@ const RegisterForm = () => {
                   <FormItem>
                     <FormLabel style={{ color: 'inherit' }}>Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Enter password"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          placeholder="Enter password"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={togglePasswordVisibility}
+                          className="absolute inset-y-0 right-3 flex items-center cursor-pointer">
+                          {showPassword ? (
+                            <Eye size={20} />
+                          ) : (
+                            <EyeOff size={20} />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -149,11 +167,23 @@ const RegisterForm = () => {
                   <FormItem>
                     <FormLabel style={{ color: 'inherit' }}>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input
-                        type="password"
-                        placeholder="Confirm password"
-                        {...field}
-                      />
+                      <div className="relative">
+                        <Input
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="Confirm password"
+                          {...field}
+                        />
+                        <button
+                          type="button"
+                          onClick={toggleConfirmPasswordVisibility}
+                          className="absolute inset-y-0 right-3 flex items-center cursor-pointer">
+                          {showConfirmPassword ? (
+                            <Eye size={20} />
+                          ) : (
+                            <EyeOff size={20} />
+                          )}
+                        </button>
+                      </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
