@@ -14,10 +14,12 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { dispatch } from "@/store/store"
-import { login, selectAuthLoading } from "@/store/slices/authSlice"
+import { login, selectAuthLoading, selectIsSendingMail, sendMail } from "@/store/slices/authSlice"
 import { useToast } from "@/hooks/use-toast"
 import { useSelector } from "react-redux"
 import { ReloadIcon } from "@radix-ui/react-icons"
+import { Eye, EyeOff } from "lucide-react"
+import { useState } from "react"
 
 const formSchema = z.object({
     email: z.string().email({
@@ -37,18 +39,27 @@ export function LoginForm({
     const { toast } = useToast()
 
     const isLoading = useSelector(selectAuthLoading)
+    const isSendingMail = useSelector(selectIsSendingMail)
+ 
+    const [showPassword, setShowPassword] = useState(false);
+
+    const togglePasswordVisibility = () => {
+        setShowPassword(prevState => !prevState); 
+    };
 
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            email: "@mailinator.com",
-            password: "",
+            email: "ramji@mailinator.com",
+            password: "123123",
         },
     })
 
     const handleLogin = async (values) => {
         try {
-            const res = await dispatch(login(values)).unwrap();
+            const res = await dispatch(login(values)).unwrap()
+            console.log(res);
+
             if (res.status === 307) {
                 try {
                     await dispatch(sendMail({
@@ -57,7 +68,7 @@ export function LoginForm({
                         resend: 1
                     })).unwrap();
 
-                    navigate('/otp-verification');
+                    // navigate('/otp-verification');
                 } catch (error) {
                     console.log(error);
                     toast({
@@ -115,26 +126,45 @@ export function LoginForm({
                                     name="password"
                                     render={({ field }) => (
                                         <FormItem>
-                                            <FormLabel style={{ color: 'inherit' }}>Password</FormLabel>
-                                            <FormControl>
+                                        <FormLabel style={{ color: 'inherit' }}>Password</FormLabel>
+                                        <FormControl>
+                                            <div className="relative"> {/* Wrap the input and icon in a container */}
                                                 <Input
-                                                    type="password"
+                                                    type={showPassword ? "text" : "password"} // Conditionally toggle between "text" and "password"
                                                     placeholder="Enter password"
                                                     {...field}
                                                 />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
+                                                {/* Icon to toggle password visibility */}
+                                                <button 
+                                                    type="button" 
+                                                    onClick={togglePasswordVisibility} 
+                                                    className="absolute inset-y-0 right-3 flex items-center cursor-pointer">
+                                                    {showPassword ? (
+                                                        <EyeOff size={15} /> // Hide icon
+                                                    ) : (
+                                                        <Eye size={15} /> // Show icon
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
                                     )}
                                 />
                                 <Button
                                     type="submit"
                                     className="w-full"
-                                    disabled={isLoading}
+                                    disabled={isLoading || isSendingMail}
                                 >
                                     {isLoading ? (
                                         <div className="flex items-center gap-2">
                                             <ReloadIcon className="h-4 w-4 animate-spin" />
+                                            Authenticating...
+                                        </div>
+                                    ) : isSendingMail ? (
+                                        <div className="flex items-center gap-2">
+                                            <ReloadIcon className="h-4 w-4 animate-spin" />
+                                            Sending OTP...
                                         </div>
                                     ) : (
                                         "Login"
@@ -150,10 +180,10 @@ export function LoginForm({
                                     to="/register"
                                     className={cn(
                                         "text-primary hover:underline",
-                                        isLoading && "text-muted-foreground cursor-not-allowed pointer-events-none"
+                                        (isLoading || isSendingMail) && "text-muted-foreground cursor-not-allowed pointer-events-none"
                                     )}
                                     onClick={(e) => {
-                                        if (isLoading) {
+                                        if (isLoading || isSendingMail) {
                                             e.preventDefault();
                                         }
                                     }}

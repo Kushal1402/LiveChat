@@ -1,15 +1,36 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Search, Settings, Plus, Edit2 } from "lucide-react"
 import { useState } from "react"
 import NewConversationDialog from "./NewConversationDialog"
 import ProfileUpdateDialog from "./ProfileUpdateDialog"
 import UserAvatar from "./UserAvatart"
-
+import { dispatch } from "@/store/store"
+import { logoutUser } from "@/store/slices/authSlice"
+import { toast } from "@/hooks/use-toast"
+import {
+  Search, Plus,
+  MoreVertical,
+  User,
+  Sun,
+  Moon,
+  Monitor,
+  LogOutIcon
+} from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+} from "@/components/ui/dropdown-menu";
+import { useTheme } from "next-themes"
 
 export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false)
   const [isProfileUpdateOpen, setIsProfileUpdateOpen] = useState(false)
+  const { setTheme, theme } = useTheme()
 
   // Current user profile (in a real app, this would come from authentication)
   const currentUser = {
@@ -30,12 +51,33 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
     }
   }
 
+  const handleLogout = () => {
+    console.log("logout");
+
+    try {
+      const res = dispatch(logoutUser()).unwrap()
+      console.log(res);
+      toast({
+        title: "Logout",
+        description: res?.data?.message || "User Logoed out Successfuly",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: error?.message || "Failed to Logout",
+        variant: "destructive"
+      });
+    }
+  }
+
+
   return (
     <div className="w-80 border-r dark:border-gray-700 bg-white dark:bg-gray-800 flex flex-col h-full">
       {/* User Profile Section */}
       <div className="p-4 border-b dark:border-gray-700">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
+            {/* User avatar and info remains the same */}
             <UserAvatar
               user={{
                 id: "current",
@@ -53,10 +95,60 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
               <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser.email}</p>
             </div>
           </div>
-          <Button size="icon" variant="ghost" className="h-10 w-10" onClick={() => setIsProfileUpdateOpen(true)}>
-            <Settings style={{ width: "20px", height: "20px" }} />
-          </Button>
 
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-10 w-10"
+                  aria-label="More options"
+                >
+                  <MoreVertical className="w-5 h-5" />
+                </Button>
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent align="end" className="w-56">
+                {/* Profile */}
+                <DropdownMenuItem onClick={() => setIsProfileUpdateOpen(true)}>
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Profile</span>
+                </DropdownMenuItem>
+
+                {/* Theme Selection */}
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger>
+                    <Sun className="mr-2 h-4 w-4" />
+                    <span>Theme</span>
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent>
+                    <DropdownMenuItem onClick={() => setTheme("light")}>
+                      <Sun className="mr-2 h-4 w-4" />
+                      Light
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTheme("dark")}>
+                      <Moon className="mr-2 h-4 w-4" />
+                      Dark
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setTheme("system")}>
+                      <Monitor className="mr-2 h-4 w-4" />
+                      System
+                    </DropdownMenuItem>
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+
+                {/* Logout */}
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
+                >
+                  <LogOutIcon className="mr-2 h-4 w-4" />
+                  <span>Logout</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
 

@@ -5,7 +5,12 @@ export const login = createAsyncThunk(
     'auth/login',
     async (credentials, { rejectWithValue }) => {
         try {
-            const response = await apiClient.post('/guest/login', credentials);
+            const response = await apiClient.post('/guest/login', credentials, {
+                validateStatus: function (status) {
+                    // Consider 307 as valid response
+                    return (status >= 200 && status < 300) || status === 307;
+                }
+            });
             return {
                 status: response.status,
                 token: response.data.token,
@@ -13,6 +18,7 @@ export const login = createAsyncThunk(
                 ...response.data
             };
         } catch (error) {
+            console.log(error);
             return rejectWithValue(error.response?.data?.message || 'Login failed');
         }
     }
@@ -26,7 +32,8 @@ export const register = createAsyncThunk(
             const response = await apiClient.post('/guest/register', userData);
             return {
                 user: response.data.result,
-                token: response.data.token
+                token: response.data.token,
+                message: response.data.message
             };
         } catch (error) {
             return rejectWithValue(error.response?.data?.message || 'Registration failed');
@@ -68,6 +75,32 @@ export const sendMail = createAsyncThunk(
         }
     }
 );
+
+
+// logout
+export const logoutUser = createAsyncThunk(
+    "/auth/logoutUser", async (_, {rejectWithValue, dispatch }) => {
+        try {
+            // First call the logout API endpoint
+            const response = await apiClient.post("/user/logout");
+            // Only clear storage if API call succeeds
+            if (response.status === 200) {
+                localStorage.removeItem("vibe-token");
+                dispatch(clearTempData());
+                dispatch(logout()); // Dispatch the sync logout action
+                return response.data;
+            }
+             throw new Error("Logout failed with status: " + response.status);
+
+        } catch (error) {
+            console.log(error);
+            
+            // Handle API errors
+            return rejectWithValue(error.response?.data?.message || "Logout failed");
+        }
+    });
+
+
 
 
 const initialState = {
@@ -136,6 +169,8 @@ const authSlice = createSlice({
             })
             .addCase(login.fulfilled, (state, action) => {
                 state.isLoading = false;
+                console.log(action.payload);
+
                 if (action.payload.status === 307) {
                     state.requiresOTP = true;
                     state.tempToken = action.payload.token;
@@ -149,6 +184,7 @@ const authSlice = createSlice({
                 }
             })
             .addCase(login.rejected, (state, action) => {
+                console.log(action.payload);
                 state.isLoading = false;
                 state.error = action.payload;
             })
@@ -199,6 +235,7 @@ export default authSlice.reducer;
 
 // Selectors (export all used in components)
 export const selectCurrentUser = (state) => state.auth.user;
+export const selectToken = (state) => state.auth.token;
 export const selectAuthLoading = (state) => state.auth.isLoading;
 export const selectAuthError = (state) => state.auth.error;
 export const selectTempEmail = (state) => state.auth.tempEmail;

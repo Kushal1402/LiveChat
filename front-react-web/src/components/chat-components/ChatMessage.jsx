@@ -4,9 +4,11 @@ import { format } from "date-fns"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import UserAvatar from "./UserAvatart"
 import { TbChecks, TbCheck } from "react-icons/tb";
+import { useMobileView } from "@/hooks/use-mobile-view";
 
 export default function ChatMessages({ messages, currentUser }) {
   const messagesEndRef = useRef(null)
+  const isMobile = useMobileView()
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -45,7 +47,9 @@ export default function ChatMessages({ messages, currentUser }) {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-850">
+    <div
+      className={`flex-1 overflow-y-auto p-4 ${isMobile ? "bg-[#e5ded8] dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"}`}
+    >
       {Object.keys(groupedMessages).map((date) => (
         <div key={date}>
           <div className="flex justify-center my-4">
@@ -61,25 +65,34 @@ export default function ChatMessages({ messages, currentUser }) {
                 </div>
               )}
               <div
-                className={`max-w-[70%] ${message.userId === "me"
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  } rounded-lg p-3 shadow`}
+                className={`max-w-[75%] ${message.userId === "me"
+                    ? "bg-primary text-primary-foreground dark:bg-gray-700 dark:text-gray-100"
+                    : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  } rounded-lg p-3 shadow ${message.userId === "me" ? "rounded-tr-none" : "rounded-tl-none"
+                  }`}
               >
                 <p>{message.text}</p>
 
                 {/* Time & Ticks shifted to the right */}
-                <div className="text-xs mt-1 flex items-center ml-auto justify-end">
+                <div
+                  className={`text-xs mt-1 flex items-center justify-end ${message.userId === "me"
+                      ? "text-gray-300 dark:text-gray-300"
+                      : "text-gray-600 dark:text-gray-300"
+                    }`}
+                >
                   {formatMessageTime(message.timestamp)}
                   {message.userId === "me" && (
                     <span className="ml-1">
-                      {message.isRead ? <TbChecks className="w-4 h-4 text-blue-500" /> : <TbCheck className="text-gray-500 w-4 h-4" />}
+                      {message.isRead ?
+                        <TbChecks className="w-4 h-4 text-blue-500" /> :
+                        <TbCheck className="text-gray-500 w-4 h-4" />
+                      }
                     </span>
                   )}
                 </div>
               </div>
 
-              {message.userId === "me" && (
+              {message.userId === "me" && !isMobile && (
                 <div className="ml-2 mt-1">
                   <Avatar>
                     <AvatarImage src="/placeholder.svg?height=40&width=40" alt="Me" />
