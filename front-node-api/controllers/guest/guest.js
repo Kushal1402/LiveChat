@@ -159,12 +159,12 @@ exports.login = async (req, res, next) => {
   }
 }
 
-// Send eMail for register, 2fa login or change-pass
+// Send eMail for register, 2fa login or forget-pass
 exports.send_mail = async (req, res, next) => {
 
   const objValidation = new niv.Validator(req.body, {
     email: "required|email",
-    request_type: "required|in:1,2", // 1 = register, 2 = change-pass, 3 = 2fa login
+    request_type: "required|in:1,2,3", // 1 = register, 2 = forget-pass, 3 = 2fa login
     resend: "required|in:1,2", // 1 = send 2 = resend
   });
   const matched = await objValidation.check();
