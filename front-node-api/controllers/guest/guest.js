@@ -206,7 +206,7 @@ exports.send_mail = async (req, res, next) => {
       });
       await SaveOtp.save();
 
-      await SendMail.SendMail(email, subject, otp, 1);
+      await SendMail.SendMail(email, subject, otp, Number(request_type));
 
       if (resend === 2) {
         message = "Verification code has been resent to your email address.";
@@ -217,6 +217,40 @@ exports.send_mail = async (req, res, next) => {
         token: token,
       });
     };
+
+    if (request_type === 2 && email) {
+
+      // Check if associated email user exists
+      let checkUserEmail = await UserModel.findOne({
+        email: {
+          $regex: email,
+          $options: "i",
+        },
+      });
+      if (!checkUserEmail || checkUserEmail === null || checkUserEmail === undefined) {
+        return res.status(409).json({
+          message: "User not found with this email!",
+        });
+      };
+
+      const SaveOtp = await TwoFactorAuthenticationModel({
+        token: token,
+        email: email,
+        code: otp
+      });
+      await SaveOtp.save();
+
+      await SendMail.SendMail(email, subject, otp, Number(request_type));
+
+      if (resend === 2) {
+        message = "Verification code has been resent to your email address.";
+      };
+
+      return res.status(200).json({
+        message: message,
+        token: token,
+      });
+    }
 
     if (request_type === 3 && email) {
 
@@ -238,7 +272,7 @@ exports.send_mail = async (req, res, next) => {
 
         subject = "Vibe Chats - Login Verification"
 
-        await SendMail.SendMail(email, subject, otp, 3);
+        await SendMail.SendMail(email, subject, otp, Number(request_type));
 
         if (resend === 2) {
           message = "Verification code has been resent to your email address.";
@@ -261,7 +295,7 @@ exports.verify_otp = async (req, res, next) => {
   const ObjValidation = new niv.Validator(req.body, {
     token: "required",
     otp: "required|maxLength:6",
-    request_type: "required",
+    request_type: "required|in:1,2,3",
     email: "required",
   });
   const matched = await ObjValidation.check();
@@ -286,7 +320,7 @@ exports.verify_otp = async (req, res, next) => {
       });
     }
 
-    await deleteOTP(token, otp);
+    if (Number(request_type) !== Number(2)) await deleteOTP(token, otp);
 
     if (request_type === 3) {
 
@@ -342,7 +376,62 @@ exports.verify_otp = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
+};
+
+// Reset User Password
+exports.resetPassword = async (req, res, next) => {
+  try {
+    const objValidation = new niv.Validator(req.body, {
+      new_password: "required|minLength:6",
+      email: "required|email",
+    });
+    const matched = await objValidation.check();
+
+    if (!matched) {
+      return res.status(422).send({
+        message: "Validation error",
+        errors: objValidation.errors,
+      });
+    };
+
+    let { new_password, email } = req.body;
+
+    // const checkOTP = await TwoFactorAuthenticationModel.findOne({
+    //   email: email
+    // });
+    // if (checkOTP?.code !== Number(otp)) {
+    //   return res.status(402).json({
+    //     message: "Invalid verification code. Please re-enter.",
+    //   });
+    // }
+
+    const UserData = await UserModel.findOne({ email: email });
+
+    if (!UserData || UserData === null || UserData === undefined) {
+      return res.status(400).send({ message: "User not found!" });
+    };
+
+    const hash = await bcrypt.hash(new_password, 10);
+
+    await UserModel.findByIdAndUpdate(
+      UserData._id,
+      {
+        $set: {
+          password: hash,
+        },
+      },
+      {
+        new: true
+      }
+    );
+
+    // await deleteOTP(token, otp);
+
+    return res.status(200).json({ message: "Password has been reset successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
 
 // Delete Otp after register user, 2fa login or change-pass
 const deleteOTP = async (token, code) => {

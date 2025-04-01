@@ -228,4 +228,65 @@ router.post("/send_mail", GuestController.send_mail);
  */
 router.post("/verify_otp", GuestController.verify_otp);
 
+/** 
+ * @swagger
+ * /api/guest/forget-password-reset:
+ *   put:
+ *     summary: Reset user password
+ *     description: This endpoint allows user to reset password.
+ *     tags:
+ *       - Guest
+ *     security:
+ *       - BearerAdminAuth: []  # Requires authorization
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               new_password:
+ *                 type: string
+ *                 description: User new password
+ *                 example: "123456@ABC"
+ *               email:
+ *                 type: string
+ *                 description: User account associated email
+ *                 example: "user@gmail.com"
+ *     responses:
+ *       200:
+ *         description: OK.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example : Password has been reset successfully
+ *                 token:
+ *                   type: string
+ *       409:
+ *         description: Conflict.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example : Invalid verification code or issue occure while updating password
+ *       500:
+ *         description: Server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred. Please try again."
+ */
+router.put('/forget-password-reset', GuestController.resetPassword);
+
 module.exports = router;
