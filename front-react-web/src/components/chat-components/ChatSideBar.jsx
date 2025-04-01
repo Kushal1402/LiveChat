@@ -26,19 +26,17 @@ import {
   DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "next-themes"
+import { useSelector } from "react-redux"
 
 export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
+
+  const { user } = useSelector((state) => state.auth)
+  console.log(user);
+
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false)
   const [isProfileUpdateOpen, setIsProfileUpdateOpen] = useState(false)
   const { setTheme, theme } = useTheme()
 
-  // Current user profile (in a real app, this would come from authentication)
-  const currentUser = {
-    name: "John Doe",
-    email: "john.doe@example.com",
-    avatar: "/placeholder.svg?height=40&width=40",
-    status: "online",
-  }
 
   const handleAddNewUser = (user) => {
     // Check if user already exists in the list
@@ -79,20 +77,12 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
           <div className="flex items-center">
             {/* User avatar and info remains the same */}
             <UserAvatar
-              user={{
-                id: "current",
-                name: currentUser.name,
-                email: currentUser.email,
-                avatar: currentUser.avatar,
-                status: currentUser.status,
-                lastSeen: "Now",
-                unreadCount: 0,
-              }}
+              user={{ ...user, status: 'online' }}
               size="lg"
             />
             <div className="ml-3">
-              <h2 className="font-semibold text-gray-900 dark:text-gray-100">{currentUser.name}</h2>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{currentUser.email}</p>
+              <h2 className="font-semibold text-gray-900 dark:text-gray-100">{user.username}</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400">{user.email}</p>
             </div>
           </div>
 
@@ -211,7 +201,7 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
       <ProfileUpdateDialog
         isOpen={isProfileUpdateOpen}
         onClose={() => setIsProfileUpdateOpen(false)}
-        currentUser={currentUser}
+        user={user}
       />
     </div>
   )

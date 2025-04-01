@@ -17,17 +17,16 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-export default function ProfileUpdateDialog({ isOpen, onClose, currentUser }) {
-  const [profileData, setProfileData] = useState({
-    name: currentUser.name,
-    email: currentUser.email,
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-    status: currentUser.status || 'online'
-  })
+export default function ProfileUpdateDialog({ isOpen, onClose, user }) {
 
-  const [avatarPreview, setAvatarPreview] = useState(currentUser.avatar)
+
+  const [profileData, setProfileData] = useState({
+    name: user.username || '',
+    email: user.email || '',
+    status: 'online',
+    about: user.about || ''
+  })
+  const [avatarPreview, setAvatarPreview] = useState(user.profile_picture)
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -86,9 +85,9 @@ export default function ProfileUpdateDialog({ isOpen, onClose, currentUser }) {
             <div className="flex flex-col items-center justify-center space-y-3">
               <div className="relative">
                 <Avatar className="h-24 w-24">
-                  <AvatarImage src={avatarPreview} alt={currentUser.name} />
+                  <AvatarImage src={avatarPreview} alt={user.username} />
                   <AvatarFallback className="text-lg">
-                    {currentUser.name
+                    {user.username
                       .split(" ")
                       .map((n) => n[0])
                       .join("")
@@ -115,7 +114,7 @@ export default function ProfileUpdateDialog({ isOpen, onClose, currentUser }) {
 
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="name">User Name</Label>
                 <Input id="name" name="name" value={profileData.name} onChange={handleInputChange} />
               </div>
 
