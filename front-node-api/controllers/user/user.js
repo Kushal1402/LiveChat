@@ -155,7 +155,7 @@ exports.updatePassword = async (req, res, next) => {
         const hash = await bcrypt.hash(new_password, 10);
 
         let result = await UserModel.findByIdAndUpdate(
-            id,
+            UserId,
             {
                 $set: {
                     password: hash,
