@@ -4,10 +4,9 @@ import { use } from "react";
 
 
 export default function UserAvatar({ user, size = "md" }) {
-  console.log(user);
   const initials = (user.name || user.username)
-    .split(" ")
-    .map((n) => n[0])
+    ?.split(" ")
+    ?.map((n) => n[0])
     .join("")
     .toUpperCase()
     .substring(0, 2)

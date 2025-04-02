@@ -19,7 +19,7 @@ export const login = createAsyncThunk(
             };
         } catch (error) {
             console.log(error);
-            return rejectWithValue(error.response?.data?.message || 'Login failed');
+            return rejectWithValue(error?.response?.data?.message || 'Login failed');
         }
     }
 );
@@ -36,7 +36,7 @@ export const register = createAsyncThunk(
                 message: response.data.message
             };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Registration failed');
+            return rejectWithValue(error?.response?.data?.message || 'Registration failed');
         }
     }
 );
@@ -55,7 +55,7 @@ export const verifyOTP = createAsyncThunk(
                 flowType: state.flowType // Include flowType in response
             };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'OTP verification failed');
+            return rejectWithValue(error?.response?.data?.message || 'OTP verification failed');
         }
     }
 );
@@ -76,10 +76,9 @@ export const sendMail = createAsyncThunk(
     }
 );
 
-
 // logout
 export const logoutUser = createAsyncThunk(
-    "/auth/logoutUser", async (_, {rejectWithValue, dispatch }) => {
+    "/auth/logoutUser", async (_, { rejectWithValue, dispatch }) => {
         try {
             // First call the logout API endpoint
             const response = await apiClient.post("/user/logout");
@@ -90,18 +89,68 @@ export const logoutUser = createAsyncThunk(
                 dispatch(logout()); // Dispatch the sync logout action
                 return response.data;
             }
-             throw new Error("Logout failed with status: " + response.status);
+            throw new Error("Logout failed with status: " + response.status);
 
         } catch (error) {
             console.log(error);
-            
+
             // Handle API errors
-            return rejectWithValue(error.response?.data?.message || "Logout failed");
+            return rejectWithValue(error?.response?.data?.message || "Logout failed");
         }
     });
 
+// GET Profile Details
+export const getProfile = createAsyncThunk(
+    'auth/getProfile',
+    async (_, { rejectWithValue }) => {
+        try {
+            const response = await apiClient.get('/user/details');
+            return {
+                user: response.data.result,
+                message: response.data.message
+            }
 
+        } catch (error) {
+            console.log(error);
+            return rejectWithValue(error?.response?.data?.message || 'failed to fetch profile')
+        }
+    }
+)
 
+// Update Profile Details
+export const updateProfile = createAsyncThunk(
+    'auth/updateProfile',
+    async (formData, { rejectWithValue }) => {
+        try {
+            const response = await apiClient.put('/user/update-profile', formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    }
+                })
+            return {
+                user: response.data?.result,
+                message: response?.data?.message,
+            }
+        } catch (error) {
+            console.log(error);
+            return rejectWithValue(error?.response?.data?.message || 'Failed to update profile')
+        }
+    }
+)
+
+export const updatePassword = createAsyncThunk(
+    'auth/updatePassword',
+    async (data, { rejectWithValue }) => {
+        try {
+            const res = await apiClient.put('/user/update-password', data)
+            return res.data.token
+        } catch (error) {
+            console.log(error);
+            return rejectWithValue(error?.response?.data?.message || 'Failed to update password')
+        }
+    }
+)
 
 const initialState = {
     user: null,
@@ -109,6 +158,8 @@ const initialState = {
     isLoading: false,
     isSendingMail: false,
     isVerifyingOTP: false,
+    isUpdatingProfile: false,
+    isUpdatingPassword: false,
     error: null,
     requiresOTP: false,
     tempToken: null,
@@ -217,8 +268,7 @@ const authSlice = createSlice({
                 state.isLoading = false;
                 state.user = action.payload.user;
                 state.token = action.payload.token;
-                localStorage.setItem('accessToken', action.payload.token.accessToken);
-                localStorage.setItem('refreshToken', action.payload.token.refreshToken);
+                localStorage.setItem('vibe-token', action.payload.token);
                 state.tempUserData = null;
                 state.flowType = null;
                 state.requiresOTP = false
@@ -226,7 +276,37 @@ const authSlice = createSlice({
             .addCase(register.rejected, (state, action) => {
                 state.isLoading = false;
                 state.error = action.payload;
-            });
+            })
+
+            // Get Details
+            .addCase(getProfile.fulfilled, (state, action) => {
+                state.user = action.payload.user
+            })
+
+            // update Details
+            .addCase(updateProfile.pending, (state, action) => {
+                state.isUpdatingProfile = true;
+            })
+            .addCase(updateProfile.fulfilled, (state, action) => {
+                state.user = action.payload.user
+                state.isUpdatingProfile = false;
+
+            })
+
+            // update password
+            .addCase(updatePassword.pending, (state, action) => {
+                state.isUpdatingPassword = true
+            })
+            .addCase(updatePassword.fulfilled, (state, action) => {
+                state.isUpdatingPassword = false
+                state.token = action.payload
+                localStorage.setItem('vibe-token', action.payload);
+
+            })
+            .addCase(updatePassword.rejected, (state, action) => {
+                state.isUpdatingPassword = false
+            })
+
     }
 });
 
@@ -245,3 +325,5 @@ export const selectIsVerifyingOTP = (state) => state.auth.isVerifyingOTP;
 export const selectRequiresOTP = (state) => state.auth.requiresOTP;
 export const selectTempToken = (state) => state.auth.tempToken;
 export const selectTempUserData = (state) => state.auth.tempUserData;
+export const selectProfileUpdating = (state) => state.auth.isUpdatingProfile
+export const selectPasswordUpdating = (state) => state.auth.isUpdatingPassword

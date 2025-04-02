@@ -48,29 +48,26 @@ const OTPVerification = () => {
 
       // Handle flow-specific logic
       if (flowType === 'register') {
-       try {
-         const res = await dispatch(register(tempUserData)).unwrap();
-         console.log(res);
-         toast({
-          title: "Registred ",
-          description: res?.message || "User Register Succesfully",
-        });
-       } catch (error) {
-        console.log(error);
-        
-        toast({
-          title: "Error",
-          description: "Faield to Register User",
-          variant: "destructive"
-        });
-       }
-        
+        try {
+          const res = await dispatch(register(tempUserData)).unwrap();
+          toast({
+            title: "Registerd ",
+            description: res?.message || "User Register Succesfully",
+          });
+        } catch (error) {
+          toast({
+            title: "Error",
+            description: error || "Failed to Register User",
+            variant: "destructive"
+          });
+        }
+
       }
       navigate('/chat');
     } catch (error) {
       toast({
         title: "Error",
-        description: error || "Failed to send OTP",
+        description: error || "Failed verify OTP",
         variant: "destructive"
       });
     }
@@ -87,11 +84,14 @@ const OTPVerification = () => {
         request_type: flowType === 'register' ? 1 : 3,
         resend: 2
       };
-
       await dispatch(sendMail(payload)).unwrap();
       setTimeLeft(60);
     } catch (error) {
-      // Handle error
+      toast({
+        title: "Error",
+        description: error || "Failed to send OTP",
+        variant: "destructive"
+      });
     }
 
   }

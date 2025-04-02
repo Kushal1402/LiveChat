@@ -275,7 +275,7 @@ export default function ChatApplication() {
     },
   ]);
 
-  const [selectedUser, setSelectedUser] = useState('')
+  const [selectedUser, setSelectedUser] = useState(users[0])
 
   const handleSendMessage = (text) => {
     if (!text.trim() || !selectedUser) return

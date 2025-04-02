@@ -2,7 +2,6 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
 import NewConversationDialog from "./NewConversationDialog"
-import ProfileUpdateDialog from "./ProfileUpdateDialog"
 import UserAvatar from "./UserAvatart"
 import { dispatch } from "@/store/store"
 import { logoutUser } from "@/store/slices/authSlice"
@@ -27,11 +26,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useTheme } from "next-themes"
 import { useSelector } from "react-redux"
+import ProfileUpdateDialog from "../profile-components/ProfileUpdateDialog"
 
 export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
 
   const { user } = useSelector((state) => state.auth)
-  console.log(user);
 
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false)
   const [isProfileUpdateOpen, setIsProfileUpdateOpen] = useState(false)
