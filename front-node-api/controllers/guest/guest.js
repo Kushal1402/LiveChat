@@ -21,7 +21,7 @@ exports.register = async (req, res, next) => {
 
   const objValidation = new niv.Validator(req.body, {
     username: "required|maxLength:25",
-    email: "required|maxLength:50",
+    email: "required|email|maxLength:50",
     password: "required|minLength:6",
   });
   const matched = await objValidation.check();
@@ -103,7 +103,7 @@ exports.login = async (req, res, next) => {
       },
       {
         $project: {
-          _id: 1,
+          _id: 0,
           username: 1,
           password: 1,
           about: 1,
@@ -320,7 +320,7 @@ exports.verify_otp = async (req, res, next) => {
       });
     }
 
-    if (Number(request_type) !== Number(2)) await deleteOTP(token, otp);
+    if (Number(request_type) !== Number(2)) await Helper.deleteOTP(token, otp);
 
     if (request_type === 3) {
 
@@ -334,7 +334,7 @@ exports.verify_otp = async (req, res, next) => {
         },
         {
           $project: {
-            _id: 1,
+            _id: 0,
             username: 1,
             password: 1,
             about: 1,
@@ -396,14 +396,22 @@ exports.resetPassword = async (req, res, next) => {
 
     let { new_password, email } = req.body;
 
-    // const checkOTP = await TwoFactorAuthenticationModel.findOne({
-    //   email: email
-    // });
-    // if (checkOTP?.code !== Number(otp)) {
-    //   return res.status(402).json({
-    //     message: "Invalid verification code. Please re-enter.",
-    //   });
-    // }
+    const checkEmail = await TwoFactorAuthenticationModel.find({ email: email }).sort({ createdAt : -1});
+
+    let lastCreatedRecord;
+    if (checkEmail && checkEmail?.length > 0) {
+      lastCreatedRecord = checkEmail[0];
+    } else {
+      return res.status(400).json({
+        message: "Error occured, please try after some time",
+      });
+    };
+
+    if (lastCreatedRecord?.email !== email) {
+      return res.status(402).json({
+        message: "Invalid email. Please re-enter.",
+      });
+    };
 
     const UserData = await UserModel.findOne({ email: email });
 
@@ -425,25 +433,10 @@ exports.resetPassword = async (req, res, next) => {
       }
     );
 
-    // await deleteOTP(token, otp);
+    await Helper.deleteOTP(lastCreatedRecord?.token, lastCreatedRecord?.otp);
 
     return res.status(200).json({ message: "Password has been reset successfully" });
   } catch (error) {
     next(error);
   }
-};
-
-// Delete Otp after register user, 2fa login or change-pass
-const deleteOTP = async (token, code) => {
-  let deleteOTP = await TwoFactorAuthenticationModel.findOneAndDelete({
-    token: {
-      $regex: token,
-      $options: "i",
-    },
-    code,
-  });
-  if (!deleteOTP) {
-    console.log("Unable to delete OTP");
-  }
-  console.log("OTP deleted");
 };

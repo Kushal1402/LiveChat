@@ -29,3 +29,17 @@ exports.generateUniqueToken = async () => {
         }
     }
 };
+
+exports.deleteOTP = async (token, code) => {
+  let deleteOTP = await TwoFactorAuthenticationModel.findOneAndDelete({
+    token: {
+      $regex: token,
+      $options: "i",
+    },
+    code,
+  });
+  if (!deleteOTP) {
+    console.log("Unable to delete OTP");
+  }
+  console.log("OTP deleted");
+};
