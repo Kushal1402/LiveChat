@@ -73,7 +73,7 @@ export function LoginForm({
                     console.log(error);
                     toast({
                         title: "Error",
-                        description: error.message || "Failed to send OTP",
+                        description: error || "Failed to send OTP",
                         variant: "destructive"
                     });
                 }

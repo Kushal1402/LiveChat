@@ -48,7 +48,7 @@ export default function ChatMessages({ messages, currentUser }) {
 
   return (
     <div
-      className={`flex-1 overflow-y-auto p-4 ${isMobile ? "bg-[#e5ded8] dark:bg-gray-900" : "bg-gray-50 dark:bg-gray-800"}`}
+      className={`flex-1 overflow-y-auto p-4 "bg-gray-50 dark:bg-gray-800`}
     >
       {Object.keys(groupedMessages).map((date) => (
         <div key={date}>

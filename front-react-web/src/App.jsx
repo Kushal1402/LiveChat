@@ -2,6 +2,7 @@ import React, { lazy, Suspense } from "react"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster"
 import { AuthRoute, OTPVerificationRoute, ProtectedRoute } from "./routes/Guards";
+import { useSelector } from "react-redux";
 
 const Login = lazy(() => import("./app/login/Login"));
 const ChatWindow = lazy(() => import("./app/Chat/Page"));
@@ -10,6 +11,10 @@ const RegisterForm = lazy(() => import("./app/login/RegisterForm"));
 
 function App() {
 
+  const { token } = useSelector((state) => state.auth)
+  if (token) {
+    localStorage.setItem('vibe-token', token)
+  }
   return (
     <>
       <Toaster />
