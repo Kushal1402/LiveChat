@@ -103,7 +103,7 @@ exports.login = async (req, res, next) => {
       },
       {
         $project: {
-          _id: 0,
+          _id: 1,
           username: 1,
           password: 1,
           about: 1,
@@ -334,7 +334,7 @@ exports.verify_otp = async (req, res, next) => {
         },
         {
           $project: {
-            _id: 0,
+            _id: 1,
             username: 1,
             password: 1,
             about: 1,
