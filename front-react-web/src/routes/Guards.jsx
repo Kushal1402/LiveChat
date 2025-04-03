@@ -31,9 +31,9 @@ export const AuthRoute = () => {
     const user = useSelector(selectCurrentUser);
     const requiresOTP = useSelector(selectRequiresOTP);
     
-    if (requiresOTP) {
-        return <Navigate to="/otp-verification" replace />;
-    }
+    // if (requiresOTP) {
+    //     return <Navigate to="/otp-verification" replace />;
+    // }
     if (user) {
         return <Navigate to="/chat" replace />;
     }

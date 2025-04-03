@@ -8,6 +8,10 @@ const Login = lazy(() => import("./app/login/Login"));
 const ChatWindow = lazy(() => import("./app/Chat/Page"));
 const OTPVerification = lazy(() => import("./app/login/OTPVerification"));
 const RegisterForm = lazy(() => import("./app/login/RegisterForm"));
+const ForgotPassword = lazy(() => import("./app/login/ForgotPassword"));
+const ResetPassword = lazy(() => import("./app/login/ResetPassword"));
+
+
 
 function App() {
 
@@ -23,6 +27,8 @@ function App() {
           <Route element={<AuthRoute />}>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<RegisterForm />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
           </Route>
 
           <Route element={<OTPVerificationRoute />}>

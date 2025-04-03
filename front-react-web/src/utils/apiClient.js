@@ -29,8 +29,8 @@ apiClient.interceptors.response.use(
     (error) => {
         if (error.response?.status === 401) {
             // Handle token expiration
-            localStorage.removeItem('vibe-token');
-            window.location.href = '/login';
+            // localStorage.removeItem('vibe-token');
+            // window.location.href = '/login';
         }
         console.log(error);
         return Promise.reject(error);

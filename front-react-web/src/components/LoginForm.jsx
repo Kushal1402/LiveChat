@@ -40,11 +40,11 @@ export function LoginForm({
 
     const isLoading = useSelector(selectAuthLoading)
     const isSendingMail = useSelector(selectIsSendingMail)
- 
+
     const [showPassword, setShowPassword] = useState(false);
 
     const togglePasswordVisibility = () => {
-        setShowPassword(prevState => !prevState); 
+        setShowPassword(prevState => !prevState);
     };
 
     const form = useForm({
@@ -58,8 +58,6 @@ export function LoginForm({
     const handleLogin = async (values) => {
         try {
             const res = await dispatch(login(values)).unwrap()
-            console.log(res);
-
             if (res.status === 307) {
                 try {
                     await dispatch(sendMail({
@@ -68,9 +66,8 @@ export function LoginForm({
                         resend: 1
                     })).unwrap();
 
-                    // navigate('/otp-verification');
+                    navigate('/otp-verification');
                 } catch (error) {
-                    console.log(error);
                     toast({
                         title: "Error",
                         description: error || "Failed to send OTP",
@@ -126,29 +123,34 @@ export function LoginForm({
                                     name="password"
                                     render={({ field }) => (
                                         <FormItem>
-                                        <FormLabel style={{ color: 'inherit' }}>Password</FormLabel>
-                                        <FormControl>
-                                            <div className="relative"> {/* Wrap the input and icon in a container */}
-                                                <Input
-                                                    type={showPassword ? "text" : "password"} // Conditionally toggle between "text" and "password"
-                                                    placeholder="Enter password"
-                                                    {...field}
-                                                />
-                                                {/* Icon to toggle password visibility */}
-                                                <button 
-                                                    type="button" 
-                                                    onClick={togglePasswordVisibility} 
-                                                    className="absolute inset-y-0 right-3 flex items-center cursor-pointer">
-                                                    {showPassword ? (
-                                                        <EyeOff size={15} /> // Hide icon
-                                                    ) : (
-                                                        <Eye size={15} /> // Show icon
-                                                    )}
-                                                </button>
+                                            <FormLabel style={{ color: 'inherit' }}>Password</FormLabel>
+                                            <FormControl>
+                                                <div className="relative"> {/* Wrap the input and icon in a container */}
+                                                    <Input
+                                                        type={showPassword ? "text" : "password"} // Conditionally toggle between "text" and "password"
+                                                        placeholder="Enter password"
+                                                        {...field}
+                                                    />
+                                                    {/* Icon to toggle password visibility */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={togglePasswordVisibility}
+                                                        className="absolute inset-y-0 right-3 flex items-center cursor-pointer">
+                                                        {showPassword ? (
+                                                            <EyeOff size={15} /> // Hide icon
+                                                        ) : (
+                                                            <Eye size={15} /> // Show icon
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </FormControl>
+                                            <FormMessage />
+                                            <div className="flex justify-end mt-1">
+                                                <a href="/forgot-password" className="text-sm text-blue-500 hover:underline">
+                                                    Forgot Password?
+                                                </a>
                                             </div>
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
+                                        </FormItem>
                                     )}
                                 />
                                 <Button
