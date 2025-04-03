@@ -22,7 +22,7 @@ import { sendMail, setFlowType, setTempUserData } from "@/store/slices/authSlice
 // icons
 import { ReloadIcon } from "@radix-ui/react-icons";
 import { selectIsSendingMail, selectRequiresOTP } from "@/store/slices/authSlice";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { registerSchema } from "@/schema/formSchemas";
 
@@ -46,8 +46,8 @@ const RegisterForm = () => {
   const form = useForm({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: "dixitvasoya",
-      email: "dixit992@mailinator.com",
+      username: "",
+      email: "@mailinator.com",
       password: "123123",
       confirmPassword: "123123",
     },

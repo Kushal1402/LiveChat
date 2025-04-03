@@ -48,11 +48,11 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
     }
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     console.log("logout");
 
     try {
-      const res = dispatch(logoutUser()).unwrap()
+      const res = await dispatch(logoutUser()).unwrap()
       console.log(res);
       toast({
         title: "Logout",

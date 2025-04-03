@@ -138,7 +138,7 @@ export const updateProfile = createAsyncThunk(
         }
     }
 )
-
+// update password
 export const updatePassword = createAsyncThunk(
     'auth/updatePassword',
     async (data, { rejectWithValue }) => {
@@ -152,6 +152,21 @@ export const updatePassword = createAsyncThunk(
     }
 )
 
+// reset forgot password
+export const resetPassword = createAsyncThunk(
+    'auth/resetPassword',
+    async (data, { rejectWithValue }) => {
+        try {
+            const res = await apiClient.put('/guest/forget-password-reset', data)            
+            return res.data.message
+
+        } catch (error) {
+            console.log(error);
+            return rejectWithValue(error?.response?.data?.message || 'Failed to Reset the password')
+        }
+    }
+)
+
 const initialState = {
     user: null,
     token: null,
@@ -160,6 +175,7 @@ const initialState = {
     isVerifyingOTP: false,
     isUpdatingProfile: false,
     isUpdatingPassword: false,
+    isResetingPassword: false,
     error: null,
     requiresOTP: false,
     tempToken: null,
@@ -205,6 +221,11 @@ const authSlice = createSlice({
                 // Set temp email based on flow type
                 if (state.flowType === 'register') {
                     state.tempEmail = state.tempUserData?.email;
+                    state.requiresOTP = true;
+                }
+                if (state.flowType === 'forgot-password') {
+                    console.log(action.meta.arg.email);
+                    state.tempEmail = action.meta.arg.email;
                     state.requiresOTP = true;
                 }
             })
@@ -307,6 +328,20 @@ const authSlice = createSlice({
                 state.isUpdatingPassword = false
             })
 
+            // reset password 
+            .addCase(resetPassword.pending, (state, action) => {
+                state.isResetingPassword = true
+            })
+            .addCase(resetPassword.fulfilled, (state, action) => {
+                state.isResetingPassword = false
+                state.flowType = null;
+                state.requiresOTP = false
+            })
+            .addCase(resetPassword.rejected, (state, action) => {
+                state.isResetingPassword = false
+                state.flowType = null
+            })
+
     }
 });
 
@@ -327,3 +362,5 @@ export const selectTempToken = (state) => state.auth.tempToken;
 export const selectTempUserData = (state) => state.auth.tempUserData;
 export const selectProfileUpdating = (state) => state.auth.isUpdatingProfile
 export const selectPasswordUpdating = (state) => state.auth.isUpdatingPassword
+export const selectPasswordReseting = (state) => state.auth.isResetingPassword
+

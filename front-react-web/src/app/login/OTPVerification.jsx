@@ -33,7 +33,11 @@ const OTPVerification = () => {
 
   const [otp, setOtp] = useState('')
   const [timeLeft, setTimeLeft] = useState(10)
-
+  const requestTypeMap = {
+    'forgot-password': 2,
+    'register': 1,
+    'login': 3
+  };
   const handleSubmit = async (e) => {
     e.preventDefault()
 
@@ -43,8 +47,9 @@ const OTPVerification = () => {
         otp,
         token: tempToken,
         email: tempEmail,
-        request_type: flowType === 'register' ? 1 : 3,
+        request_type: requestTypeMap[flowType],
       })).unwrap();
+
 
       // Handle flow-specific logic
       if (flowType === 'register') {
@@ -63,8 +68,12 @@ const OTPVerification = () => {
         }
 
       }
-      navigate('/chat');
+      if (flowType === 'forgot-password') {
+        navigate('/reset-password', { state: { otp } })
+      }
     } catch (error) {
+      console.log(error);
+
       toast({
         title: "Error",
         description: error || "Failed verify OTP",
@@ -81,7 +90,7 @@ const OTPVerification = () => {
     try {
       const payload = {
         email: tempEmail,
-        request_type: flowType === 'register' ? 1 : 3,
+        request_type: requestTypeMap[flowType],
         resend: 2
       };
       await dispatch(sendMail(payload)).unwrap();
