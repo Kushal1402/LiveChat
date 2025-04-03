@@ -150,7 +150,7 @@ exports.updatePassword = async (req, res, next) => {
         const UserData = await UserModel.findById(UserId);
 
         if (!UserData || UserData === null || UserData === undefined) {
-            return res.status(400).send({ message: "User not found!" });
+            return res.status(404).send({ message: "User not found!" });
         };
 
         const CompareOldPass = await bcrypt.compare(old_password, UserData.password);
@@ -223,7 +223,7 @@ exports.logout = async (req, res, next) => {
         try {
             decoded = await jwtr.verify(token, process.env.JWT_KEY);
         } catch (error) {
-            return res.status(400).json({ message: "User logged out successfully" })
+            return res.status(400).json({ message: "Verification failed, please re-initiate the request" })
         }
 
         const jti = decoded.jti;
@@ -358,7 +358,7 @@ exports.verify_otp = async (req, res, next) => {
             code: otp,
         });
         if (checkOTP?.code !== Number(otp)) {
-            return res.status(402).json({
+            return res.status(406).json({
                 message: "Invalid verification code. Please re-enter.",
             });
         }
@@ -394,7 +394,7 @@ exports.resetPassword = async (req, res, next) => {
         // Check if the user is valid
         const UserData = await UserModel.findOne({ email: email });
         if (!UserData || UserData === null || UserData === undefined) {
-            return res.status(400).send({ message: "User not found!" });
+            return res.status(404).send({ message: "User not found!" });
         };
 
         // Check if the OTP is matching with the reset-password request 
@@ -404,7 +404,7 @@ exports.resetPassword = async (req, res, next) => {
             code: otp,
         });
         if (checkOTP?.code !== Number(otp)) {
-            return res.status(402).json({
+            return res.status(409).json({
                 message: "Verification failed. Please re-initiate the process.",
             });
         };
@@ -483,7 +483,7 @@ exports.updateEmail = async (req, res, next) => {
             code: otp,
         });
         if (checkOTP?.code !== Number(otp)) {
-            return res.status(402).json({
+            return res.status(409).json({
                 message: "Verification failed. Please re-initiate the process.",
             });
         };

@@ -315,7 +315,7 @@ exports.verify_otp = async (req, res, next) => {
       code: otp,
     });
     if (checkOTP?.code !== Number(otp)) {
-      return res.status(402).json({
+      return res.status(406).json({
         message: "Invalid verification code. Please re-enter.",
       });
     }
@@ -347,7 +347,7 @@ exports.verify_otp = async (req, res, next) => {
 
       let user_details = user_data[0];
       if (user_details === null || user_details === undefined) {
-        return res.status(406).json({
+        return res.status(404).json({
           message: "No record found with this email address",
         });
       };
@@ -404,14 +404,14 @@ exports.resetPassword = async (req, res, next) => {
       code: otp,
     });
     if (checkEmail?.code !== Number(otp)) {
-      return res.status(402).json({
+      return res.status(409).json({
         message: "Verification failed. Please re-initiate the process",
       });
     }
 
     const UserData = await UserModel.findOne({ email: email });
     if (!UserData || UserData === null || UserData === undefined) {
-      return res.status(400).send({ message: "User not found!" });
+      return res.status(404).send({ message: "User not found!" });
     };
 
     const hash = await bcrypt.hash(new_password, 10);
