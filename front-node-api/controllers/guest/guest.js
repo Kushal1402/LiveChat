@@ -384,6 +384,8 @@ exports.resetPassword = async (req, res, next) => {
     const objValidation = new niv.Validator(req.body, {
       new_password: "required|minLength:6",
       email: "required|email",
+      token: "required",
+      otp: "required|maxLength:6",
     });
     const matched = await objValidation.check();
 
@@ -394,27 +396,20 @@ exports.resetPassword = async (req, res, next) => {
       });
     };
 
-    let { new_password, email } = req.body;
+    let { new_password, email, token, otp } = req.body;
 
-    const checkEmail = await TwoFactorAuthenticationModel.find({ email: email }).sort({ createdAt : -1});
-
-    let lastCreatedRecord;
-    if (checkEmail && checkEmail?.length > 0) {
-      lastCreatedRecord = checkEmail[0];
-    } else {
-      return res.status(400).json({
-        message: "Error occured, please try after some time",
-      });
-    };
-
-    if (lastCreatedRecord?.email !== email) {
+    const checkEmail = await TwoFactorAuthenticationModel.findOne({
+      token: token,
+      email: email,
+      code: otp,
+    });
+    if (checkEmail?.code !== Number(otp)) {
       return res.status(402).json({
-        message: "Invalid email. Please re-enter.",
+        message: "Verification failed. Please re-initiate the process",
       });
-    };
+    }
 
     const UserData = await UserModel.findOne({ email: email });
-
     if (!UserData || UserData === null || UserData === undefined) {
       return res.status(400).send({ message: "User not found!" });
     };
@@ -433,7 +428,7 @@ exports.resetPassword = async (req, res, next) => {
       }
     );
 
-    await Helper.deleteOTP(lastCreatedRecord?.token, lastCreatedRecord?.otp);
+    await Helper.deleteOTP(token, otp);
 
     return res.status(200).json({ message: "Password has been reset successfully" });
   } catch (error) {

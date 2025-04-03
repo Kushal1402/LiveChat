@@ -1,7 +1,9 @@
 # LiveChat
 
 ## Description
-A modern chat application using React, Node.js, and MongoDB with Socket.io for real-time messaging, providing users with fast and dynamic conversations.
+A modern chat web-application using React, Node.js, and MongoDB with Socket.io for real-time messaging, providing users with fast and dynamic conversations.
+
+This project is currently in the MVP stage. It is an early version of the software that includes enough features to allow the web-application to be deployed. As an MVP, this product is continuously being refined based on feedback, requirements & features.
 
 ## Built With
 - React

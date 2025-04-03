@@ -27,4 +27,23 @@ module.exports = {
             throw error;
         }
     },
+
+    removeMedia: async (folderName, file, resourceType) => {
+        try {
+            const mediaParts = file.split("/");
+            // console.log("Media Parts : ", mediaParts);
+
+            const publicId = mediaParts[mediaParts.length - 1].split(".")[0];
+            // console.log("Public Id : ", publicId, " --- ", typeof publicId);
+
+            const StructuredPublicId = `${folderName}/${publicId}`;
+
+            const removeMedia = await cloudinary.uploader.destroy(StructuredPublicId, { resource_type: resourceType?.toString(), invalidate: true });
+            // console.log("Media Removed : ", removeMedia);
+
+            return removeMedia;
+        } catch (error) {
+            throw error;
+        }
+    },
 }

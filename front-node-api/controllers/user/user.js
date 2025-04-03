@@ -49,6 +49,10 @@ exports.updateProfile = async (req, res, next) => {
 
         let uploadMedia, updateObj = {};
         if (req.file) {
+            
+            if (req.userData?.image_version && req.userData?.profile_picture) {
+                await media_handler.removeMedia("uploads/user", req.userData?.profile_picture, "image");
+            };
 
             const base64String = req.file.buffer.toString("base64");
             const base64EncodeData = `data:${req.file.mimetype};base64,${base64String}`;

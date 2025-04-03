@@ -236,8 +236,6 @@ router.post("/verify_otp", GuestController.verify_otp);
  *     description: This endpoint allows user to reset password.
  *     tags:
  *       - Guest
- *     security:
- *       - BearerAdminAuth: []  # Requires authorization
  *     requestBody:
  *       required: true
  *       content:
@@ -253,6 +251,13 @@ router.post("/verify_otp", GuestController.verify_otp);
  *                 type: string
  *                 description: User account associated email
  *                 example: "user@gmail.com"
+ *               token:
+ *                 type: string
+ *                 description: Token to verify same user
+ *               otp:
+ *                 type: integer
+ *                 description: otp shared on mail.
+ *                 example: 123456
  *     responses:
  *       200:
  *         description: OK.
