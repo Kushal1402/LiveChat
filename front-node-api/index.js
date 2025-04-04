@@ -136,6 +136,3 @@ io.on("connection", async (socket) => {
         console.log("Client disconnected: " + socket.id);
     });
 });
-
-// Export the io instance
-module.exports.io = io;
