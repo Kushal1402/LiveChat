@@ -46,7 +46,8 @@ export const verifyOTP = createAsyncThunk(
     'auth/verifyOTP',
     async (otpData, { rejectWithValue, getState }) => {
         try {
-            const response = await apiClient.post('/guest/verify_otp', otpData);
+            const response = await apiClient.post(`/${otpData.request_type === 4 ? 'user' : 'guest'}/verify_otp`, otpData);
+
             const state = getState().auth;
 
             // Return different payloads based on flow
@@ -55,6 +56,8 @@ export const verifyOTP = createAsyncThunk(
                 flowType: state.flowType // Include flowType in response
             };
         } catch (error) {
+            console.log(error?.response?.data?.message);
+
             return rejectWithValue(error?.response?.data?.message || 'OTP verification failed');
         }
     }
@@ -65,13 +68,13 @@ export const sendMail = createAsyncThunk(
     'auth/sendMail',
     async (userData, { rejectWithValue }) => {
         try {
-            const response = await apiClient.post('/guest/send_mail', userData);
+            const response = await apiClient.post(`/${userData.request_type === 4 ? 'user' : 'guest'}/send_mail`, userData);
             return {
                 token: response.data.token,
                 message: response.data.message
             };
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to send email');
+            return rejectWithValue(error.response?.data?.message || 'Failed to Send Otp');
         }
     }
 );
@@ -157,12 +160,46 @@ export const resetPassword = createAsyncThunk(
     'auth/resetPassword',
     async (data, { rejectWithValue }) => {
         try {
-            const res = await apiClient.put('/guest/forget-password-reset', data)            
+            const res = await apiClient.put('/guest/forget-password-reset', data)
             return res.data.message
 
         } catch (error) {
             console.log(error);
             return rejectWithValue(error?.response?.data?.message || 'Failed to Reset the password')
+        }
+    }
+)
+
+// 2FA update
+export const update2FA = createAsyncThunk(
+    'auth/update2FA',
+    async (data, { rejectWithValue }) => {
+        try {
+            const res = await apiClient.put('/user/update-authentication', data)
+            console.log(res);
+            return res.data?.two_factor_authentication
+        } catch (error) {
+            console.log(error);
+            return rejectWithValue(error?.data?.message)
+        }
+    }
+)
+
+// Update Email Address
+export const updateEmail = createAsyncThunk(
+    'auth/updateEmail',
+    async (data, { rejectWithValue }) => {
+        try {
+            const response = await apiClient.post('/user/update-email', data)
+            console.log(response);
+            return {
+                user: response.data.result,
+                ...response.data
+            };
+        } catch (error) {
+            console.log(error);
+            
+            return rejectWithValue(error?.response?.data?.message)
         }
     }
 )
@@ -176,7 +213,8 @@ const initialState = {
     isUpdatingProfile: false,
     isUpdatingPassword: false,
     isResetingPassword: false,
-    error: null,
+    isUpdatingEmail: false,
+    isUpdating2FA: false,
     requiresOTP: false,
     tempToken: null,
     tempEmail: null,
@@ -201,10 +239,12 @@ const authSlice = createSlice({
         setFlowType: (state, action) => {
             state.flowType = action.payload;
         },
+        setIs2FAEnabled: (state, action) => {
+            state.user.two_factor_authentication = action.payload;
+        },
         logout: (state) => {
             state.user = null;
             state.token = null;
-            state.error = null;
             localStorage.removeItem('vibe-token');
         },
     },
@@ -213,7 +253,6 @@ const authSlice = createSlice({
             // Send Mail (OTP)
             .addCase(sendMail.pending, (state) => {
                 state.isSendingMail = true;
-                state.error = null;
             })
             .addCase(sendMail.fulfilled, (state, action) => {
                 state.isSendingMail = false;
@@ -224,20 +263,17 @@ const authSlice = createSlice({
                     state.requiresOTP = true;
                 }
                 if (state.flowType === 'forgot-password') {
-                    console.log(action.meta.arg.email);
                     state.tempEmail = action.meta.arg.email;
                     state.requiresOTP = true;
                 }
             })
             .addCase(sendMail.rejected, (state, action) => {
                 state.isSendingMail = false;
-                state.error = action.payload;
             })
 
             // Login
             .addCase(login.pending, (state) => {
                 state.isLoading = true;
-                state.error = null;
             })
             .addCase(login.fulfilled, (state, action) => {
                 state.isLoading = false;
@@ -258,32 +294,30 @@ const authSlice = createSlice({
             .addCase(login.rejected, (state, action) => {
                 console.log(action.payload);
                 state.isLoading = false;
-                state.error = action.payload;
             })
 
             // Verify OTP
             .addCase(verifyOTP.pending, (state) => {
                 state.isVerifyingOTP = true;
-                state.error = null;
             })
             .addCase(verifyOTP.fulfilled, (state, action) => {
                 state.isVerifyingOTP = false;
-                if (state.flowType === 'login') {
+                if (['login'].includes(state.flowType)) {
                     state.user = action.payload.result;
                     state.token = action.payload.token;
                     localStorage.setItem('vibe-token', action.payload.token);
+                    state.flowType = null
                 }
                 state.requiresOTP = false;
             })
             .addCase(verifyOTP.rejected, (state, action) => {
                 state.isVerifyingOTP = false;
-                state.error = action.payload;
+                state.requiresOTP = false;
             })
 
             // Register
             .addCase(register.pending, (state) => {
                 state.isLoading = true;
-                state.error = null;
             })
             .addCase(register.fulfilled, (state, action) => {
                 state.isLoading = false;
@@ -296,7 +330,6 @@ const authSlice = createSlice({
             })
             .addCase(register.rejected, (state, action) => {
                 state.isLoading = false;
-                state.error = action.payload;
             })
 
             // Get Details
@@ -312,6 +345,9 @@ const authSlice = createSlice({
                 state.user = action.payload.user
                 state.isUpdatingProfile = false;
 
+            })
+            .addCase(updateProfile.rejected, (state, action) => {
+                state.isUpdatingProfile = false
             })
 
             // update password
@@ -342,10 +378,38 @@ const authSlice = createSlice({
                 state.flowType = null
             })
 
+            // Update 2FA
+            .addCase(update2FA.pending, (state, action) => {
+                state.isUpdating2FA = true
+            })
+            .addCase(update2FA.fulfilled, (state, action) => {
+                state.user.two_factor_authentication = action.payload
+                state.isUpdating2FA = false
+            })
+            .addCase(update2FA.rejected, (state, action) => {
+                state.isUpdating2FA = false
+            })
+
+            .addCase(updateEmail.pending, (state, action) => {
+                state.isUpdatingEmail = true
+            })
+            .addCase(updateEmail.fulfilled, (state, action) => {
+                state.isUpdatingEmail = false
+                state.tempToken = null
+                state.user = action.payload.user
+                state.flowType = null
+
+            })
+            .addCase(updateEmail.rejected, (state, action) => {
+                state.isUpdatingEmail = false
+                state.flowType = null
+            })
+
+
     }
 });
 
-export const { clearTempData, setTempUserData, setFlowType, logout } = authSlice.actions;
+export const { clearTempData, setTempUserData, setFlowType, logout, setIs2FAEnabled } = authSlice.actions;
 export default authSlice.reducer;
 
 // Selectors (export all used in components)
@@ -363,4 +427,7 @@ export const selectTempUserData = (state) => state.auth.tempUserData;
 export const selectProfileUpdating = (state) => state.auth.isUpdatingProfile
 export const selectPasswordUpdating = (state) => state.auth.isUpdatingPassword
 export const selectPasswordReseting = (state) => state.auth.isResetingPassword
+export const selectUpdating2FA = (state) => state.auth.isUpdating2FA
+export const selectIsUpdatingMail = (state) => state.auth.isUpdatingEmail
+
 
