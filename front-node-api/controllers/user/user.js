@@ -106,7 +106,7 @@ exports.updateAuthentication = async (req, res, next) => {
 
         const two_factor_authentication = req.body.two_factor_authentication;
 
-        await UserModel.findByIdAndUpdate(
+        const result = await UserModel.findByIdAndUpdate(
             id,
             {
                 $set: {
@@ -115,6 +115,7 @@ exports.updateAuthentication = async (req, res, next) => {
             },
             {
                 new: true,
+                select: '-_id two_factor_authentication'
             }
         );
 
@@ -122,6 +123,7 @@ exports.updateAuthentication = async (req, res, next) => {
 
         return res.status(200).json({
             message: message,
+            two_factor_authentication: result?.two_factor_authentication
         });
     } catch (error) {
         next(error);
