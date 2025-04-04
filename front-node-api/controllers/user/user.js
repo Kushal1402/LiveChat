@@ -478,6 +478,8 @@ exports.updateEmail = async (req, res, next) => {
         }
         const UserId = req.userData.id;
 
+        const { email, token, otp } = req.body;
+
         // Check if the OTP is matching with the change-email request 
         const checkOTP = await TwoFactorAuthenticationModel.findOne({
             token: token,
@@ -489,9 +491,7 @@ exports.updateEmail = async (req, res, next) => {
                 message: "Verification failed. Please re-initiate the process.",
             });
         };
-
-        const { email, token, otp } = req.body;
-
+        
         // console.log("User : ", UserId, "req.body : ", req.body)
 
         const result = await UserModel.findByIdAndUpdate(
