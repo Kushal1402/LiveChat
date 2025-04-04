@@ -4,6 +4,7 @@ const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 var cors = require("cors");
+const { Server } = require("socket.io");
 
 require("dotenv").config();
 require('./config/db')
@@ -109,6 +110,32 @@ app.use(async (error, req, res, next) => {
     });
 });
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
     console.log('Server started at : ' + port)
 })
+
+// Create the Socket.IO instance
+const io = new Server(server, {
+    cors: {
+        origin: "*",
+        methods: ["GET", "PUT", "POST"],
+    }
+});
+// console.log("🚀 ~ io:", io)
+
+io.on("connection", async (socket) => {
+    console.log("A client connected: " + socket.id);
+    
+    socket.on("message", (data) => {
+        console.log("New message arrived");
+        io.emit("message", { return_message: data });
+    });
+
+    // Handle client disconnect
+    socket.on("disconnect", () => {
+        console.log("Client disconnected: " + socket.id);
+    });
+});
+
+// Export the io instance
+module.exports.io = io;

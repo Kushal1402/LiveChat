@@ -490,7 +490,7 @@ exports.updateEmail = async (req, res, next) => {
             });
         };
 
-        const { email } = req.body;
+        const { email, token, otp } = req.body;
 
         // console.log("User : ", UserId, "req.body : ", req.body)
 
