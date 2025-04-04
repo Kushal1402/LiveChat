@@ -134,7 +134,7 @@ router.put('/update-profile', upload.single('profile_picture'), UserAuthMiddlewa
  *                   type: string
  *                   example : Two factor authentication has been successfully changed
  */
-router.put('update-authentication', UserAuthMiddleware, UserController.updateAuthentication);
+router.put('/update-authentication', UserAuthMiddleware, UserController.updateAuthentication);
 
 /** 
  * @swagger
