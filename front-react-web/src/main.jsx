@@ -8,7 +8,7 @@ import { PersistGate } from 'redux-persist/integration/react'
 import { ThemeProvider } from "next-themes"  // Import ThemeProvider
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
+  // <StrictMode>
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         {/* Wrap App with ThemeProvider */}
@@ -17,5 +17,5 @@ createRoot(document.getElementById('root')).render(
         </ThemeProvider>
       </PersistGate>
     </Provider>
-  </StrictMode>,
+  // </StrictMode>,
 )

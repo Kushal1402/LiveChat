@@ -12,12 +12,56 @@ import { useToast } from "@/hooks/use-toast"
 import { useSelector } from 'react-redux'
 import { ReloadIcon } from '@radix-ui/react-icons'
 
+
+const statusOptions = [
+    {
+      value: "available",
+      label: "Available",
+      icon: CheckCircle2,
+      color: "text-green-500"
+    },
+    {
+      value: "busy",
+      label: "Busy",
+      icon: Clock,
+      color: "text-yellow-500"
+    },
+    {
+      value: "at_work",
+      label: "At Work",
+      icon: Briefcase,
+      color: "text-blue-500"
+    },
+    {
+      value: "break",
+      label: "On a Break",
+      icon: Coffee,
+      color: "text-orange-500"
+    },
+    {
+      value: "away",
+      label: "Away",
+      icon: Moon,
+      color: "text-purple-500"
+    },
+    {
+      value: "gaming",
+      label: "Gaming",
+      icon: Gamepad2,
+      color: "text-red-500"
+    }
+  ]
+
+
 const ProfileTab = ({ user }) => {
     const { toast } = useToast()
     const [avatarPreview, setAvatarPreview] = useState(user.profile_picture)
     const [selectedFile, setSelectedFile] = useState(null)
     const isProfileUpdating = useSelector(selectProfileUpdating)
 
+    const [selectedStatus, setSelectedStatus] = useState("available")
+    const [isSaving, setIsSaving] = useState(false)
+    
 
     const profileUpdateForm = useForm({
         defaultValues: {
