@@ -240,7 +240,7 @@ exports.send_mail = async (req, res, next) => {
       });
       await SaveOtp.save();
 
-      await SendMail.SendMail(email, subject, otp, Number(request_type));
+      await SendMail.SendMail(email, subject, { otp: otp, username: checkUserEmail.username }, Number(request_type));
 
       if (resend === 2) {
         message = "Verification code has been resent to your email address.";
@@ -272,7 +272,7 @@ exports.send_mail = async (req, res, next) => {
 
         subject = "Vibe Chats - Login Verification"
 
-        await SendMail.SendMail(email, subject, otp, Number(request_type));
+        await SendMail.SendMail(email, subject, { otp: otp, username: checkUserEmail.username }, Number(request_type));
 
         if (resend === 2) {
           message = "Verification code has been resent to your email address.";
@@ -429,6 +429,10 @@ exports.resetPassword = async (req, res, next) => {
     );
 
     await Helper.deleteOTP(token, otp);
+
+    // Send email to user
+    const subject = "Vibe Chats - Password Reset Success";
+    await SendMail.SendMail(UserData?.email, subject, UserData, 6);
 
     return res.status(200).json({ message: "Password has been reset successfully" });
   } catch (error) {

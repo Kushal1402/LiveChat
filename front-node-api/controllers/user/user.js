@@ -49,7 +49,7 @@ exports.updateProfile = async (req, res, next) => {
 
         let uploadMedia, updateObj = {};
         if (req.file) {
-            
+
             if (req.userData?.image_version && req.userData?.profile_picture) {
                 await media_handler.removeMedia("uploads/user", req.userData?.profile_picture, "image");
             };
@@ -285,7 +285,7 @@ exports.send_mail = async (req, res, next) => {
             });
             await SaveOtp.save();
 
-            await SendMail.SendMail(email, subject, otp, Number(request_type));
+            await SendMail.SendMail(email, subject, { otp: otp, username: checkUserEmail.username }, Number(request_type));
 
             if (resend === 2) {
                 message = "Verification code has been resent to your email address.";
@@ -319,7 +319,7 @@ exports.send_mail = async (req, res, next) => {
             });
             await SaveOtp.save();
 
-            await SendMail.SendMail(email, subject, otp, Number(request_type));
+            await SendMail.SendMail(email, subject, { otp: otp, username: checkUserEmail.username }, Number(request_type));
 
             if (resend === 2) {
                 message = "Verification code has been resent to your email address.";
@@ -452,6 +452,10 @@ exports.resetPassword = async (req, res, next) => {
         // Destroy the token & otp
         await Helper.deleteOTP(token, otp);
 
+        // Send email to user
+        const subject = "Vibe Chats - Password Reset Success";
+        await SendMail.SendMail(result?.email, subject, result, 6);
+
         return res.status(200).json({
             token: auth_token,
             message: "Password has been reset successfully",
@@ -477,6 +481,7 @@ exports.updateEmail = async (req, res, next) => {
             });
         }
         const UserId = req.userData.id;
+        const old_email = req.userData.email;
 
         const { email, token, otp } = req.body;
 
@@ -491,7 +496,7 @@ exports.updateEmail = async (req, res, next) => {
                 message: "Verification failed. Please re-initiate the process.",
             });
         };
-        
+
         // console.log("User : ", UserId, "req.body : ", req.body)
 
         const result = await UserModel.findByIdAndUpdate(
@@ -509,6 +514,10 @@ exports.updateEmail = async (req, res, next) => {
 
         // Destroy the token & otp
         await Helper.deleteOTP(token, otp);
+
+        // Send email to user
+        const subject = "Vibe Chats - Email Changed Success";
+        await SendMail.SendMail(result?.email, subject, { username: result?.username, old_email: old_email, new_email: result?.email }, 7);
 
         if (result) {
             return res.status(200).json({
