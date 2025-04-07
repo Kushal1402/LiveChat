@@ -198,7 +198,7 @@ export const updateEmail = createAsyncThunk(
             };
         } catch (error) {
             console.log(error);
-            
+
             return rejectWithValue(error?.response?.data?.message)
         }
     }
@@ -215,6 +215,7 @@ const initialState = {
     isResetingPassword: false,
     isUpdatingEmail: false,
     isUpdating2FA: false,
+    isLoggingOut: false,
     requiresOTP: false,
     tempToken: null,
     tempEmail: null,
@@ -390,6 +391,7 @@ const authSlice = createSlice({
                 state.isUpdating2FA = false
             })
 
+            // Update-Email
             .addCase(updateEmail.pending, (state, action) => {
                 state.isUpdatingEmail = true
             })
@@ -403,6 +405,17 @@ const authSlice = createSlice({
             .addCase(updateEmail.rejected, (state, action) => {
                 state.isUpdatingEmail = false
                 state.flowType = null
+            })
+
+            // Logout User
+            .addCase(logoutUser.pending, (state, action) => {
+                state.isLoggingOut = true
+            })
+            .addCase(logoutUser.fulfilled, (state, action) => {
+                state.isLoggingOut = false
+            })
+            .addCase(logoutUser.rejected, (state, action) => {
+                state.isLoggingOut = false
             })
 
 
@@ -429,5 +442,6 @@ export const selectPasswordUpdating = (state) => state.auth.isUpdatingPassword
 export const selectPasswordReseting = (state) => state.auth.isResetingPassword
 export const selectUpdating2FA = (state) => state.auth.isUpdating2FA
 export const selectIsUpdatingMail = (state) => state.auth.isUpdatingEmail
+export const selectIsLoggingOut = (state) => state.auth.isLoggingOut
 
 

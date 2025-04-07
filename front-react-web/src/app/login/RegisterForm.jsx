@@ -47,9 +47,9 @@ const RegisterForm = () => {
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
-      email: "@mailinator.com",
-      password: "123123",
-      confirmPassword: "123123",
+      email: "",
+      password: "",
+      confirmPassword: "",
     },
   })
 

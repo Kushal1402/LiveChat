@@ -16,7 +16,7 @@ const ProfileUpdateDialog = ({ isOpen, onClose, user }) => {
   }, [isOpen])
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="max-w-[90%] sm:max-w-[500px] sm:p-4">
         <DialogHeader>
           <DialogTitle className="text-xl">Update Profile</DialogTitle>
         </DialogHeader>

@@ -4,7 +4,7 @@ import { useState } from "react"
 import NewConversationDialog from "./NewConversationDialog"
 import UserAvatar from "./UserAvatart"
 import { dispatch } from "@/store/store"
-import { logoutUser } from "@/store/slices/authSlice"
+import { logoutUser, selectIsLoggingOut } from "@/store/slices/authSlice"
 import { toast } from "@/hooks/use-toast"
 import {
   Search, Plus,
@@ -27,13 +27,16 @@ import {
 import { useTheme } from "next-themes"
 import { useSelector } from "react-redux"
 import ProfileUpdateDialog from "../profile-components/ProfileUpdateDialog"
+import LogoutDialog from "../profile-components/LogoutDIalog"
 
 export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
 
   const { user } = useSelector((state) => state.auth)
+  const isLoggingOut = useSelector(selectIsLoggingOut)
 
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false)
   const [isProfileUpdateOpen, setIsProfileUpdateOpen] = useState(false)
+  const [logoutModel, setLogoutModel] = useState(false)
   const { setTheme, theme } = useTheme()
 
 
@@ -49,7 +52,6 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
   }
 
   const handleLogout = async () => {
-    console.log("logout");
 
     try {
       const res = await dispatch(logoutUser()).unwrap()
@@ -129,7 +131,7 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
 
                 {/* Logout */}
                 <DropdownMenuItem
-                  onClick={handleLogout}
+                  onClick={() => setLogoutModel(true)}
                   className="text-red-600 focus:bg-red-50 dark:focus:bg-red-900/20"
                 >
                   <LogOutIcon className="mr-2 h-4 w-4" />
@@ -201,6 +203,13 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
         isOpen={isProfileUpdateOpen}
         onClose={() => setIsProfileUpdateOpen(false)}
         user={user}
+      />
+
+      <LogoutDialog
+        isOpen={logoutModel}
+        onClose={() => setLogoutModel(false)}
+        onConfirm={handleLogout}
+        loading={isLoggingOut}
       />
     </div>
   )

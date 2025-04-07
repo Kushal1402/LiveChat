@@ -72,7 +72,7 @@ export default function NewConversationDialog({ isOpen, onClose, onSelectUser })
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="max-w-[90%] sm:max-w-md sm:p-4">
         <DialogHeader>
           <DialogTitle className="text-xl">New message</DialogTitle>
           <DialogDescription className="text-sm text-muted-foreground">

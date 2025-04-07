@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { Button } from '../ui/button'
-import { Camera } from 'lucide-react'
+import { Briefcase, Camera, CheckCircle2, Clock, Coffee, Gamepad2, Moon } from 'lucide-react'
 import { Label } from '../ui/label'
 import { Input } from '../ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../ui/select'
@@ -178,44 +178,26 @@ const ProfileTab = ({ user }) => {
                                 name="status"
                                 control={profileUpdateForm.control}
                                 render={({ field }) => (
-                                    <Select
-                                        value={field.value}
-                                        onValueChange={field.onChange}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Select status" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectGroup>
-                                                <SelectLabel>User Status</SelectLabel>
-                                                <SelectItem value="online">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="h-2 w-2 rounded-full bg-green-500" />
-                                                        Online
-                                                    </div>
-                                                </SelectItem>
-                                                <SelectItem value="away">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="h-2 w-2 rounded-full bg-yellow-500" />
-                                                        Away
-                                                    </div>
-                                                </SelectItem>
-                                                <SelectItem value="busy">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="h-2 w-2 rounded-full bg-red-500" />
-                                                        Busy
-                                                    </div>
-                                                </SelectItem>
-                                                <SelectItem value="offline">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="h-2 w-2 rounded-full bg-gray-500" />
-                                                        Offline
-                                                    </div>
-                                                </SelectItem>
-                                            </SelectGroup>
-                                        </SelectContent>
+                                    <Select value={field.value} onValueChange={field.onChange}>
+                                      <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Select status" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectGroup>
+                                          <SelectLabel>User Status</SelectLabel>
+                                          {statusOptions.map((option) => (
+                                            <SelectItem key={option.value} value={option.value}>
+                                              <div className="flex items-center gap-2">
+                                                <option.icon className={`h-4 w-4 ${option.color}`} />
+                                                {option.label}
+                                              </div>
+                                            </SelectItem>
+                                          ))}
+                                        </SelectGroup>
+                                      </SelectContent>
                                     </Select>
-                                )}
+                                  )}
+                                  
                             />
                             {profileUpdateForm.formState.errors.status && (
                                 <p className="text-sm text-red-500">
