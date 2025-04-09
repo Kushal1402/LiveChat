@@ -117,7 +117,7 @@ const OTPVerification = () => {
   }, [timeLeft])
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+    <div className="flex min-h-screen items-center justify-center p-4">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl text-center">Verify Your Email</CardTitle>

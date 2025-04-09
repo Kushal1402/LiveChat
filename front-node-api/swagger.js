@@ -1,7 +1,7 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 const path = require('path');
 
-const hostName = process.env.SITE_URL || "https://vibe-chats-backend.vercel.app/";
+const hostName = process.env.SITE_URL || "https://vibe-chats-backend.onrender.com";
 
 // Swagger options
 const options = {

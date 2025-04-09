@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar'
 import { Button } from '../ui/button'
-import { Briefcase, Camera, CheckCircle2, Clock, Coffee, Gamepad2, Moon } from 'lucide-react'
+import { Briefcase, Camera, CheckCircle2, Clock, Coffee, Gamepad2, Moon, BookOpen, Projector } from 'lucide-react'
 import { Label } from '../ui/label'
 import { Input } from '../ui/input'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '../ui/select'
@@ -14,54 +14,20 @@ import { ReloadIcon } from '@radix-ui/react-icons'
 
 
 const statusOptions = [
-    {
-      value: "available",
-      label: "Available",
-      icon: CheckCircle2,
-      color: "text-green-500"
-    },
-    {
-      value: "busy",
-      label: "Busy",
-      icon: Clock,
-      color: "text-yellow-500"
-    },
-    {
-      value: "at_work",
-      label: "At Work",
-      icon: Briefcase,
-      color: "text-blue-500"
-    },
-    {
-      value: "break",
-      label: "On a Break",
-      icon: Coffee,
-      color: "text-orange-500"
-    },
-    {
-      value: "away",
-      label: "Away",
-      icon: Moon,
-      color: "text-purple-500"
-    },
-    {
-      value: "gaming",
-      label: "Gaming",
-      icon: Gamepad2,
-      color: "text-red-500"
-    }
-  ]
-
+    { value: "Available", label: "Available", icon: CheckCircle2, color: "text-green-500" },
+    { value: "Busy", label: "Busy", icon: Clock, color: "text-yellow-500" },
+    { value: "Away", label: "Sleeping", icon: Moon, color: "text-purple-500" },
+    { value: "school", label: "At School", icon: BookOpen, color: "text-green-500" },
+    { value: "work", label: "At Work", icon: Briefcase, color: "text-blue-500" },
+    { value: "meeting", label: "In a Meeting", icon: Projector, color: "text-red-900" },
+    { value: "break", label: "On a Break", icon: Coffee, color: "text-orange-500" },
+    { value: "gaming", label: "Gaming", icon: Gamepad2, color: "text-red-500" }
+]
 
 const ProfileTab = ({ user }) => {
     const { toast } = useToast()
     const [avatarPreview, setAvatarPreview] = useState(user.profile_picture)
-    const [selectedFile, setSelectedFile] = useState(null)
     const isProfileUpdating = useSelector(selectProfileUpdating)
-
-    const [selectedStatus, setSelectedStatus] = useState("available")
-    const [isSaving, setIsSaving] = useState(false)
-    
 
     const profileUpdateForm = useForm({
         defaultValues: {
@@ -71,7 +37,7 @@ const ProfileTab = ({ user }) => {
         },
     })
 
-    const { register, handleSubmit, setValue ,getValues} = profileUpdateForm;
+    const { register, handleSubmit, setValue, getValues } = profileUpdateForm;
 
     const onSubmit = async (data) => {
         let formData = new FormData()
@@ -79,20 +45,13 @@ const ProfileTab = ({ user }) => {
         formData.append('username', data.username)
         formData.append('about', data.status)
         if (getValues('profile_picture')) {
-            console.log('insideif');
-            
             formData.append('profile_picture', data.profile_picture)
         } else {
             formData.append('profile_picture', user.profile_picture)
         }
-        console.log(formData);
-        
-        console.log('profile_picture :',formData.get("profile_picture"));
-        
+
         try {
             const res = await dispatch(updateProfile(formData)).unwrap()
-            console.log(res);
-
             toast({
                 title: "Updated!",
                 description: res?.message
@@ -105,7 +64,6 @@ const ProfileTab = ({ user }) => {
                 variant: "destructive"
             });
         }
-
     }
 
     const handleFileChange = (e) => {
@@ -118,9 +76,7 @@ const ProfileTab = ({ user }) => {
             }
             reader.readAsDataURL(file)
         }
-    }
-
-
+    };
     return (
         <>
             <FormProvider {...profileUpdateForm}>
@@ -179,25 +135,25 @@ const ProfileTab = ({ user }) => {
                                 control={profileUpdateForm.control}
                                 render={({ field }) => (
                                     <Select value={field.value} onValueChange={field.onChange}>
-                                      <SelectTrigger className="w-full">
-                                        <SelectValue placeholder="Select status" />
-                                      </SelectTrigger>
-                                      <SelectContent>
-                                        <SelectGroup>
-                                          <SelectLabel>User Status</SelectLabel>
-                                          {statusOptions.map((option) => (
-                                            <SelectItem key={option.value} value={option.value}>
-                                              <div className="flex items-center gap-2">
-                                                <option.icon className={`h-4 w-4 ${option.color}`} />
-                                                {option.label}
-                                              </div>
-                                            </SelectItem>
-                                          ))}
-                                        </SelectGroup>
-                                      </SelectContent>
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Select status" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectGroup>
+                                                <SelectLabel>User Status</SelectLabel>
+                                                {statusOptions.map((option) => (
+                                                    <SelectItem key={option.value} value={option.value}>
+                                                        <div className="flex items-center gap-2">
+                                                            <option.icon className={`h-4 w-4 ${option.color}`} />
+                                                            {option.label}
+                                                        </div>
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectGroup>
+                                        </SelectContent>
                                     </Select>
-                                  )}
-                                  
+                                )}
+
                             />
                             {profileUpdateForm.formState.errors.status && (
                                 <p className="text-sm text-red-500">
