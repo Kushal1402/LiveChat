@@ -25,6 +25,11 @@ const PasswordTab = () => {
                 title: "Password Updated!",
                 description: res?.data?.message || "New Password Updated Succesfuly"
             })
+            passwordForm.reset({
+                currentPassword: '',
+                newPassword: '',
+                confirmPassword: ''
+            });
         }
         catch (error) {
             console.log(error);
@@ -50,7 +55,7 @@ const PasswordTab = () => {
                 <CardHeader>
                     <CardTitle>Password</CardTitle>
                     <CardDescription>
-                        Change your password. After saving, you'll be logged out and will need to sign in with your new password.
+                        Change your password.
                     </CardDescription>
                 </CardHeader>
                 <form onSubmit={passwordForm.handleSubmit(onSubmit)}>

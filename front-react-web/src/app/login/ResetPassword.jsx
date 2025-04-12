@@ -14,7 +14,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { dispatch } from "@/store/store"
-import { resetPassword, selectIsSendingMail, selectPasswordReseting, selectTempEmail, selectTempToken } from "@/store/slices/authSlice"
+import { resetPassword, selectPasswordReseting, selectTempEmail, selectTempToken } from "@/store/slices/authSlice"
 import { useSelector } from "react-redux"
 import { ReloadIcon } from "@radix-ui/react-icons"
 import { useToast } from "@/hooks/use-toast"
@@ -54,7 +54,7 @@ const ResetPassword = () => {
             })).unwrap()            
             toast({
                 title: "Password Changed !",
-                description: res?.data?.message || " User Password Changes Succesfuly ",
+                description: res?.message || " User Password Changes Succesfuly ",
             });
             navigate('/login')
 

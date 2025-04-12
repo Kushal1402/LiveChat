@@ -37,7 +37,7 @@ const ProfileUpdateDialog = ({ isOpen, onClose, user }) => {
 
           {/* Account Tab */}
           <TabsContent value="account" className="space-y-4 py-4">
-            <AccountTab />
+            <AccountTab user={user} />
           </TabsContent>
 
           <TabsContent value="password" className="space-y-4 py-4">

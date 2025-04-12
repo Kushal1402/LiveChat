@@ -432,7 +432,7 @@ exports.resetPassword = async (req, res, next) => {
 
     // Send email to user
     const subject = "Vibe Chats - Password Reset Success";
-    await SendMail.SendMail(UserData?.email, subject, UserData, 6);
+    await SendMail.SendMail(UserData?.email, subject, data=UserData, 6);
 
     return res.status(200).json({ message: "Password has been reset successfully" });
   } catch (error) {

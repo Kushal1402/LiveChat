@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Link, useNavigate } from "react-router"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "./ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -50,8 +50,8 @@ export function LoginForm({
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            email: "ramji@mailinator.com",
-            password: "123123",
+            email: "",
+            password: "",
         },
     })
 

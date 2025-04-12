@@ -58,7 +58,7 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
       console.log(res);
       toast({
         title: "Logout",
-        description: res?.data?.message || "User Logoed out Successfuly",
+        description: res?.message || "User Logoed out Successfuly",
       });
     } catch (error) {
       toast({

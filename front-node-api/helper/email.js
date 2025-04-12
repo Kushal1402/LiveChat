@@ -652,7 +652,7 @@ const ChangeEMailTemplate = (data) => {
 
 const ResetPasswordSuccessMailTemplate = (data) => {
     const logo = 'https://raw.githubusercontent.com/Kushal1402/LiveChat/develop/front-node-api/static_assets/vibe_chats.png';
-    const user = data.user;
+    const user = data.username;
 
     let emailBody = `
     <!DOCTYPE html>
@@ -791,7 +791,7 @@ const ResetPasswordSuccessMailTemplate = (data) => {
 
 const ChangeEmailSuccessMailTemplate = (data) => {
     const logo = 'https://raw.githubusercontent.com/Kushal1402/LiveChat/develop/front-node-api/static_assets/vibe_chats.png';
-    const { username, old_email, new_email } = data.user;
+    const { username, old_email, new_email } = data;
 
     let emailBody = `
     <!DOCTYPE html>

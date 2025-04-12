@@ -33,7 +33,7 @@ const ForgotPassword = () => {
     const form = useForm({
         resolver: zodResolver(formSchema),
         defaultValues: {
-            email: "ramji@mailinator.com",
+            email: "",
         },
     })
 

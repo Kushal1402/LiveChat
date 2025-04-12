@@ -254,6 +254,7 @@ exports.send_mail = async (req, res, next) => {
         });
     }
     const { email, request_type, resend } = req.body;
+    const userData = req.userData;
 
     try {
 
@@ -285,7 +286,7 @@ exports.send_mail = async (req, res, next) => {
             });
             await SaveOtp.save();
 
-            await SendMail.SendMail(email, subject, { otp: otp, username: checkUserEmail.username }, Number(request_type));
+            await SendMail.SendMail(email, subject, { otp: otp, username: userData.username }, Number(request_type));
 
             if (resend === 2) {
                 message = "Verification code has been resent to your email address.";
@@ -517,7 +518,7 @@ exports.updateEmail = async (req, res, next) => {
 
         // Send email to user
         const subject = "Vibe Chats - Email Changed Success";
-        await SendMail.SendMail(result?.email, subject, { username: result?.username, old_email: old_email, new_email: result?.email }, 7);
+        await SendMail.SendMail(result?.email, subject, data={ username: result?.username, old_email: old_email, new_email: result?.email }, 7);
 
         if (result) {
             return res.status(200).json({

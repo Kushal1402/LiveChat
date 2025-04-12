@@ -56,7 +56,7 @@ const OTPVerification = () => {
         try {
           const res = await dispatch(register(tempUserData)).unwrap();
           toast({
-            title: "Registerd ",
+            title: "Registered ",
             description: res?.message || "User Register Succesfully",
           });
         } catch (error) {
@@ -93,8 +93,12 @@ const OTPVerification = () => {
         request_type: requestTypeMap[flowType],
         resend: 2
       };
-      await dispatch(sendMail(payload)).unwrap();
+      const resendMail = await dispatch(sendMail(payload)).unwrap();
       setTimeLeft(60);
+      toast({
+        title: "Otp Sent ! ",
+        description: resendMail?.message || "Otp Send Succesfully",
+      });
     } catch (error) {
       toast({
         title: "Error",

@@ -24,8 +24,7 @@ const emailSchema = z.object({
     email: z.string().email("Please enter a valid email address"),
 })
 
-
-const AccountTab = () => {
+const AccountTab = ({ user }) => {
 
     const { toast } = useToast()
     const tempToken = useSelector(selectTempToken)
@@ -36,15 +35,14 @@ const AccountTab = () => {
 
     const [isOTPOpen, setIsOTPOpen] = useState(false)
     const [otp, setOtp] = useState('')
-    const [timeLeft, setTimeLeft] = useState(5)
+    const [timeLeft, setTimeLeft] = useState(10)
     const [otpError, setOtpError] = useState('')
-
 
     useEffect(() => {
         if (isOTPOpen) {
             setOtp('')
             setOtpError('')
-            setTimeLeft(5)
+            setTimeLeft(10)
         }
     }, [isOTPOpen])
 
@@ -64,7 +62,7 @@ const AccountTab = () => {
                 resend: 1
             })).unwrap()
             toast({
-                title: "Opt Sent ! ",
+                title: "Otp Sent ! ",
                 description: res?.message || "Otp Send Succesfully",
             });
             handleOpenOTP();
@@ -90,7 +88,7 @@ const AccountTab = () => {
             if (flowType === 'update-mail') {
                 const payload = {
                     email,
-                    token: "asasas",
+                    token: tempToken,
                     otp
                 }
                 try {
@@ -101,6 +99,7 @@ const AccountTab = () => {
                         title: "Updated ! ",
                         description: res?.data?.message || "Email Updated Succesfully",
                     });
+                    reset({ email: "" });
                 } catch (error) {
                     handleCloseOTP()
                     toast({
@@ -109,13 +108,10 @@ const AccountTab = () => {
                         variant: "destructive"
                     });
                 }
-
             }
         } catch (error) {
             setOtpError(error)
-            console.log(err);
-            // throw new Error(error)
-
+            console.log(error);
         }
     }
     const handleCloseOTP = () => {
@@ -123,7 +119,6 @@ const AccountTab = () => {
     }
     const handleOpenOTP = () => {
         setIsOTPOpen(true)
-
     }
 
     const handleResendOTP = async () => {
@@ -134,39 +129,36 @@ const AccountTab = () => {
             const res = await dispatch(sendMail({
                 email,
                 request_type: 4,
-                resend: 1
+                resend: 2
             })).unwrap()
-            setTimeLeft(30)
-            // toast({
-            //     title: "Opt Sent ! ",
-            //     description: res?.message || "Otp Send Succesfully",
-            // });
+            setTimeLeft(60)
+            toast({
+                title: "Otp Sent ! ",
+                description: res?.message || "Otp Send Succesfully",
+            });
             handleOpenOTP();
         } catch (error) {
             console.log(error);
-
-            // toast({
-            //     title: "Error",
-            //     description: error || "Failed to Sent Otp TryAgain",
-            //     variant: "destructive"
-            // });
+            toast({
+                title: "Error",
+                description: error || "Failed to Sent Otp! Please try again",
+                variant: "destructive"
+            });
         }
-    }
-
+    };
 
     const {
         register,
         handleSubmit,
         formState: { errors, isSubmitting },
-        getValues
+        getValues,
+        reset
     } = useForm({
         resolver: zodResolver(emailSchema),
         defaultValues: {
             email: "" // Initial email value
         }
     })
-
-
 
     return (
         <>
@@ -180,8 +172,19 @@ const AccountTab = () => {
 
                 <form onSubmit={handleSubmit(handleSendOtp)}>
                     <CardContent className="space-y-4">
+
                         <div className="space-y-2">
-                            <Label htmlFor="email">Email</Label>
+                            <Label htmlFor="curr_email">Email</Label>
+                            <Input
+                                id="curr_email"
+                                type="email"
+                                value={user.email}
+                                disabled
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="email">New Email</Label>
                             <Input
                                 id="email"
                                 type="email"
