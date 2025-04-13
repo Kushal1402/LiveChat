@@ -11,7 +11,6 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  base: "/",
 
   // optimizeDeps: {
   //   include: ["@emoji-mart/react", "@emoji-mart/data"],
