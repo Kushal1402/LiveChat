@@ -3,6 +3,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster"
 import { AuthRoute, OTPVerificationRoute, ProtectedRoute } from "./routes/Guards";
 import { useSelector } from "react-redux";
+import useSocket from "./hooks/useSocket";
+import { SocketProvider } from "./context/SocketContext";
 
 const Login = lazy(() => import("./app/login/Login"));
 const ChatWindow = lazy(() => import("./app/Chat/Page"));
@@ -11,38 +13,40 @@ const RegisterForm = lazy(() => import("./app/login/RegisterForm"));
 const ForgotPassword = lazy(() => import("./app/login/ForgotPassword"));
 const ResetPassword = lazy(() => import("./app/login/ResetPassword"));
 
-
-
 function App() {
-
   const { token } = useSelector((state) => state.auth)
   if (token) {
     localStorage.setItem('vibe-token', token)
   }
+  const socket = useSocket(token);
+  console.log(socket);  
+
+
   return (
     <>
       <Toaster />
-      <BrowserRouter>
-        <Routes>
-          <Route element={<AuthRoute />}>
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<RegisterForm />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-          </Route>
+      <SocketProvider socket={socket}>
+        <BrowserRouter>
+          <Routes>
+            <Route element={<AuthRoute />}>
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<RegisterForm />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+            </Route>
 
-          <Route element={<OTPVerificationRoute />}>
-            <Route path="/otp-verification" element={<OTPVerification />} />
-          </Route>
+            <Route element={<OTPVerificationRoute />}>
+              <Route path="/otp-verification" element={<OTPVerification />} />
+            </Route>
 
-          <Route element={<ProtectedRoute />}>
-            <Route path="/chat" element={<ChatWindow />} />
-          </Route>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/chat" element={<ChatWindow />} />
+            </Route>
 
-          <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </BrowserRouter>
-
+            <Route path="/" element={<Navigate to="/login" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </SocketProvider>
     </>
   )
 }

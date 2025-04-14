@@ -84,10 +84,7 @@ const ProfileTab = ({ user }) => {
             formData.append('profile_picture', data.profile_picture)
         } else {
             formData.append('profile_picture', user.profile_picture)
-        }
-        console.log(formData);
-        
-        console.log('profile_picture :',formData.get("profile_picture"));
+        }    
         
         try {
             const res = await dispatch(updateProfile(formData)).unwrap()

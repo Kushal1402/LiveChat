@@ -19,7 +19,6 @@ export default function ChatApplication() {
   const { setTheme } = useTheme()
   const [isProfileUpdateOpen, setIsProfileUpdateOpen] = useState(false)
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false)
-  console.log(isProfileUpdateOpen);
 
   const { user } = useSelector((state) => state.auth)
 
