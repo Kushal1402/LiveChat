@@ -4,6 +4,8 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster"
 import { AuthRoute, OTPVerificationRoute, ProtectedRoute } from "./routes/Guards";
 import { useSelector } from "react-redux";
+import useSocket from "./hooks/useSocket";
+import { SocketProvider } from "./context/SocketContext";
 
 import LoadingScreen from "./components/ui/LoadingScreen";
 
@@ -15,24 +17,26 @@ const ForgotPassword = lazy(() => import("./app/login/ForgotPassword"));
 const ResetPassword = lazy(() => import("./app/login/ResetPassword"));
 
 function App() {
-
   const { token } = useSelector((state) => state.auth)
   if (token) {
     localStorage.setItem('vibe-token', token)
   }
+  const socket = useSocket(token);
+
   return (
     <>
       <Toaster />
-
+      <SocketProvider socket={socket}>
+  
       <BrowserRouter>
-        <Suspense fallback={<LoadingScreen />}>
+          <Suspense fallback={<LoadingScreen />}>
           <Routes>
-            <Route element={<AuthRoute />}>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<RegisterForm />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-            </Route>
+              <Route element={<AuthRoute />}>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<RegisterForm />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+              </Route>
 
             <Route element={<OTPVerificationRoute />}>
               <Route path="/otp-verification" element={<OTPVerification />} />
@@ -42,11 +46,11 @@ function App() {
               <Route path="/chat" element={<ChatWindow />} />
             </Route>
 
-            <Route path="/" element={<Navigate to="/login" replace />} />
-          </Routes>
-        </Suspense>
+              <Route path="/" element={<Navigate to="/login" replace />} />
+            </Routes>
+          </Suspense>
       </BrowserRouter>
-
+      </SocketProvider>
     </>
   )
 }
