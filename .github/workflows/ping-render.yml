@@ -1,0 +1,16 @@
+name: Keep Render Awake
+
+on:
+  schedule:
+    - cron: '*/14 * * * *' # Every 14 minutes
+  workflow_dispatch:  # Optional: lets you manually trigger this workflow from GitHub
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Curl Render Web Service
+        run: |
+          echo "Pinging Render at $(date -u)..."
+          curl -s -w " %{http_code}" https://vibe-chats-backend.onrender.com/ || echo "Ping failed"
