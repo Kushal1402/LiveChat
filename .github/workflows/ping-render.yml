@@ -3,6 +3,17 @@ name: Keep Render Awake
 on:
   schedule:
     - cron: '*/14 * * * *' # Every 14 minutes
+    # cron job only during specific hours in UTC (9:00–17:30 IST)
+    # - cron: '0,14,28,42,56 3 * * *'
+    # - cron: '0,14,28,42,56 4 * * *'
+    # - cron: '0,14,28,42,56 5 * * *'
+    # - cron: '0,14,28,42,56 6 * * *'
+    # - cron: '0,14,28,42,56 7 * * *'
+    # - cron: '0,14,28,42,56 8 * * *'
+    # - cron: '0,14,28,42,56 9 * * *'
+    # - cron: '0,14,28,42,56 10 * * *'
+    # - cron: '0,14,28,42,56 11 * * *'
+    # - cron: '0,14,28,42,56 12 * * *'
   workflow_dispatch:  # Optional: lets you manually trigger this workflow from GitHub
 
 jobs:

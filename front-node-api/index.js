@@ -4,7 +4,7 @@ const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 var cors = require("cors");
-const { Server } = require("socket.io");
+const initSocket = require('./utils/socket');
 
 require("dotenv").config();
 require('./config/db')
@@ -32,30 +32,6 @@ mongoose.Promise = global.Promise;
 
 // Node Port
 const port = process.env.PORT || 5000;
-
-// Redis
-const { createClient } = require('redis');
-const redisClient = createClient({
-    username: 'default',
-    password: process.env.REDIS_PASSWORD,
-    socket: {
-        host: 'redis-16398.crce182.ap-south-1-1.ec2.redns.redis-cloud.com',
-        port: 16398
-    }
-});
-
-redisClient.on("error", (err) => console.error("Redis Client Error:", err));
-
-(async () => {
-    try {
-        await redisClient.connect();
-        console.log("Redis client connected successfully");
-    } catch (err) {
-        console.error("Error connecting Redis client:", err);
-    }
-})();
-global.redisClient = redisClient;
-
 
 // Guest Routes
 const GuestRoutes = require('./routes/guest/guest');
@@ -112,27 +88,6 @@ app.use(async (error, req, res, next) => {
 
 const server = app.listen(port, () => {
     console.log('Server started at : ' + port)
-})
-
-// Create the Socket.IO instance
-const io = new Server(server, {
-    cors: {
-        origin: "*",
-        methods: ["GET", "PUT", "POST"],
-    }
 });
-// console.log("🚀 ~ io:", io)
 
-io.on("connection", async (socket) => {
-    console.log("A client connected: " + socket.id);
-    
-    socket.on("message", (data) => {
-        console.log("New message arrived");
-        io.emit("message", { return_message: data });
-    });
-
-    // Handle client disconnect
-    socket.on("disconnect", () => {
-        console.log("Client disconnected: " + socket.id);
-    });
-});
+initSocket(server);
