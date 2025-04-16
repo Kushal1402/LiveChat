@@ -45,6 +45,10 @@ const UserSchema = mongoose.Schema(
             type: Boolean, // true - enabled, false - disabled
             default: false,
         },
+        status: {
+            type: Boolean, // true - online, false - offline
+            default: false,
+        },
     },
     {
         timestamps: true,
