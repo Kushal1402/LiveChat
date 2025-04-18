@@ -4,6 +4,7 @@ const morgan = require("morgan");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 var cors = require("cors");
+const redisClient = require('./utils/redis');
 const initSocket = require('./utils/socket');
 
 require("dotenv").config();
@@ -90,4 +91,4 @@ const server = app.listen(port, () => {
     console.log('Server started at : ' + port)
 });
 
-initSocket(server);
+initSocket(server, redisClient);

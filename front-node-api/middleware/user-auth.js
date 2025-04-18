@@ -1,5 +1,7 @@
 const JWTR = require('jwt-redis').default;
-const jwtr = new JWTR(global.redisClient);
+const redisClient = require('../utils/redis');
+
+let jwtr = new JWTR(redisClient);
 
 const UserModel = require('../models/user')
 

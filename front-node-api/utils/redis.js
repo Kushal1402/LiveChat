@@ -12,6 +12,8 @@ const redisClient = createClient({
 
 redisClient.on("error", (err) => console.error("❌ Redis Client Error:", err));
 
+redisClient.on("reconnecting", () => console.warn("🔁 Attempting to reconnect to Redis..."));
+
 (async () => {
     try {
         await redisClient.connect();
@@ -20,5 +22,4 @@ redisClient.on("error", (err) => console.error("❌ Redis Client Error:", err));
         console.error("Error connecting Redis client:", err);
     }
 })();
-global.redisClient = redisClient;
 module.exports = redisClient;

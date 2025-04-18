@@ -49,6 +49,10 @@ const UserSchema = mongoose.Schema(
             type: Boolean, // true - online, false - offline
             default: false,
         },
+        lastActive: {
+            type: Date,
+            detfault: Date.now
+        },
     },
     {
         timestamps: true,

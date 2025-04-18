@@ -7,14 +7,9 @@ const UserModel = require("../../models/user");
 const TwoFactorAuthenticationModel = require("../../models/twoFactorAuthentication");
 const SendMail = require("../../helper/email");
 const Helper = require("../../helper/index");
+const redisClient = require('../../utils/redis');
 
-let jwtr;
-if (global.redisClient) {
-  jwtr = new JWTR(global.redisClient); // Initialize jwt-redis with global redisClient
-} else {
-  console.error('Redis client is not initialized');
-  throw new Error('Redis client is not connected');
-}
+let jwtr = new JWTR(redisClient);
 
 // Register User
 exports.register = async (req, res, next) => {

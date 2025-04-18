@@ -8,14 +8,14 @@ const TwoFactorAuthenticationModel = require("../../models/twoFactorAuthenticati
 const Helper = require("../../helper/index");
 const media_handler = require("../../helper/media_handler");
 const SendMail = require("../../helper/email");
+const redisClient = require('../../utils/redis');
 
-let jwtr;
-if (global.redisClient) {
-    jwtr = new JWTR(global.redisClient); // Initialize jwt-redis with global redisClient
-} else {
-    console.error('Redis client is not initialized');
-    throw new Error('Redis client is not connected');
-}
+let jwtr = new JWTR(redisClient);{
+    $sort: {
+      status: 1,      // Sort active users (status=1) first, then inactive (status=2)
+      createdAt: -1,  // Within each status group, newest first
+    },
+  },
 
 // Get user details
 exports.getUserDetails = async (req, res, next) => {

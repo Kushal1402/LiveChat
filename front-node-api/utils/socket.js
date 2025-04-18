@@ -5,15 +5,13 @@ require("dotenv").config();
 const UserModel = require("../models/user");
 
 let jwtr;
-if (global.redisClient) {
-  jwtr = new JWTR(global.redisClient);
-} else {
-  console.error('Redis client is not initialized');
-  throw new Error('Redis client is not connected');
-}
+let redisClient;
 
 // Create the Socket.IO instance
-const initSocket = (server) => {
+const initSocket = (server, redis) => {
+
+    redisClient = redis;
+    jwtr = new JWTR(redisClient);
 
     const io = new Server(server, {
         cors: {
@@ -24,14 +22,12 @@ const initSocket = (server) => {
     // console.log("🚀 ~ io:", io)
 
     // Socket.IO authentication middleware
-    io.use((socket, next) => {
+    io.use(async (socket, next) => {
         const token = socket.handshake.auth.token;
-        if (!token) {
-            return next(new Error("Authentication error: Token missing"));
-        };
+        if (!token) return next(new Error("Authentication error: Token missing"));
 
         try {
-            const decoded = jwtr.verify(token, process.env.JWT_KEY);
+            const decoded = await jwtr.verify(token, process.env.JWT_KEY);
             socket.user = decoded;
             next();
         } catch (err) {
@@ -42,18 +38,21 @@ const initSocket = (server) => {
 
     // Socket event handlers
     io.on("connection", async (socket) => {
-        console.log("✅ Authenticated client connected: " + socket.id + "User:", socket.user);
+        console.log("✅ Authenticated client connected: " + socket.id + "  User:", socket.user);
+
+        let SocketUser = socket.user;
 
         // Mark user as online in redis
-        await global.redisClient.set(`user:${socket.user._id}:status`, "online");
-        await global.redisClient.set(`user:${socket.user._id}:socket`, socket.id);
+        await redisClient.set(`user:${SocketUser.id}:status`, "online");
+        await redisClient.set(`user:${SocketUser.id}:socket`, socket.id);
+        
         // Update DB
-        await UserModel.findByIdAndUpdate(socket.user._id, { status: true });
+        await UserModel.findByIdAndUpdate(SocketUser.id, { status: true });
         // Broadcast online
-        socket.broadcast.emit("user-online", { userId : socket.user._id });
+        socket.broadcast.emit("user-online", { userId : SocketUser.id });
 
         socket.on("message", (data) => {
-            console.log("New message arrived");
+            console.log("New message arrived", data);
             io.emit("message", { return_message: data });
         });
 
@@ -62,10 +61,10 @@ const initSocket = (server) => {
             console.log("❌ Client disconnected: " + socket.id);
 
             // Mark user as offline in redis
-            await global.redisClient.set(`user:${socket.user._id}:status`, "offline");
-            await UserModel.findByIdAndUpdate(socket.user._id, { status: false });
+            await redisClient.set(`user:${SocketUser.id}:status`, "offline");
+            await UserModel.findByIdAndUpdate(SocketUser.id, { status: false });
 
-            socket.broadcast.emit("user-offline", { userId : socket.user._id });
+            socket.broadcast.emit("user-offline", { userId : SocketUser.id });
         });
     });
 
