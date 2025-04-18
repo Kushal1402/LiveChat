@@ -1,6 +1,6 @@
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import NewConversationDialog from "./NewConversationDialog"
 import UserAvatar from "./UserAvatart"
 import { dispatch } from "@/store/store"
@@ -28,10 +28,22 @@ import { useTheme } from "next-themes"
 import { useSelector } from "react-redux"
 import ProfileUpdateDialog from "../profile-components/ProfileUpdateDialog"
 import LogoutDialog from "../profile-components/LogoutDIalog"
+import { fetchConversations, selectConversationListItems } from "@/store/slices/chatSlice"
+import MemoizedConversationItem from "./MemoizedConversationItem"
 
 export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
+  console.log(selectedUser);  
+  
+  const { activeConversation } = useSelector((state) => state.conversations)
+  console.log(activeConversation);
+  
 
-  const { user } = useSelector((state) => state.auth)
+
+  // const conversations = useSelector(selectAllConversations);
+  // const conversations = useSelector(selectEnrichedConversations);
+  const conversations = useSelector(selectConversationListItems);
+
+  console.log(conversations);
   const isLoggingOut = useSelector(selectIsLoggingOut)
 
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false)
@@ -39,16 +51,19 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
   const [logoutModel, setLogoutModel] = useState(false)
   const { setTheme, theme } = useTheme()
 
+  useEffect(() => {
+    dispatch(fetchConversations())
+  }, [])
 
   const handleAddNewUser = (user) => {
     // Check if user already exists in the list
-    const existingUser = users.find((u) => u.id === user.id)
-    if (!existingUser) {
-      // In a real app, you would call a function passed from the parent to add the user
-      onSelectUser(user)
-    } else {
-      onSelectUser(existingUser)
-    }
+    // const existingUser = users.find((u) => u.id === user.id)
+    // if (!existingUser) {
+    //   // In a real app, you would call a function passed from the parent to add the user
+    //   onSelectUser(user)
+    // } else {
+    //   onSelectUser(existingUser)
+    // }
   }
 
   const handleLogout = async () => {
@@ -147,10 +162,7 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
       <div className="p-4 border-b dark:border-gray-700">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Messages</h1>
-          <div className="flex">
-            {/* <Button size="icon" variant="ghost" className="h-8 w-8">
-              <Settings className="h-4 w-4" />
-            </Button> */}
+          <div className="flex">            
             <Button size="icon" variant="ghost" className="h-8 w-8 ml-1" onClick={() => setIsNewConversationOpen(true)}>
               <Plus className="h-4 w-4" />
             </Button>
@@ -168,27 +180,8 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
 
       {/* Conversations List */}
       <div className="overflow-y-auto flex-1">
-        {users.map((user) => (
-          <div
-            key={user.id}
-            className={`flex items-center p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${selectedUser?.id === user.id ? "bg-gray-200 dark:bg-gray-700" : ""
-              }`}
-            onClick={() => onSelectUser(user)}
-          >
-            <UserAvatar user={user} />
-            <div className="ml-3 flex-1 overflow-hidden">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user.name}</h3>
-                <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">{user.lastSeen}</span>
-              </div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-            </div>
-            {user.unreadCount > 0 && (
-              <span className="ml-2 bg-primary text-primary-foreground text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center">
-                {user.unreadCount}
-              </span>
-            )}
-          </div>
+         {conversations.map((conv) => (
+          <MemoizedConversationItem key={conv.id} conv={conv} selectedUser={selectedUser} onSelectUser={onSelectUser} />
         ))}
       </div>
 
@@ -202,7 +195,6 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
       <ProfileUpdateDialog
         isOpen={isProfileUpdateOpen}
         onClose={() => setIsProfileUpdateOpen(false)}
-        user={user}
       />
 
       <LogoutDialog
@@ -211,6 +203,8 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
         onConfirm={handleLogout}
         loading={isLoggingOut}
       />
+
+
     </div>
   )
 }

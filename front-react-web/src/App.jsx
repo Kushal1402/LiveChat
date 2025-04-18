@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster"
 import { AuthRoute, OTPVerificationRoute, ProtectedRoute } from "./routes/Guards";
 import { useSelector } from "react-redux";
-import useSocket from "./hooks/useSocket";
 import { SocketProvider } from "./context/SocketContext";
 
 import LoadingScreen from "./components/ui/LoadingScreen";
@@ -18,19 +17,13 @@ const ResetPassword = lazy(() => import("./app/login/ResetPassword"));
 
 function App() {
   const { token } = useSelector((state) => state.auth)
-  if (token) {
-    localStorage.setItem('vibe-token', token)
-  }
-  const socket = useSocket(token);
-
   return (
     <>
       <Toaster />
-      <SocketProvider socket={socket}>
-  
-      <BrowserRouter>
+      <SocketProvider token={token}>
+        <BrowserRouter>
           <Suspense fallback={<LoadingScreen />}>
-          <Routes>
+            <Routes>
               <Route element={<AuthRoute />}>
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<RegisterForm />} />
@@ -38,18 +31,18 @@ function App() {
                 <Route path="/reset-password" element={<ResetPassword />} />
               </Route>
 
-            <Route element={<OTPVerificationRoute />}>
-              <Route path="/otp-verification" element={<OTPVerification />} />
-            </Route>
+              <Route element={<OTPVerificationRoute />}>
+                <Route path="/otp-verification" element={<OTPVerification />} />
+              </Route>
 
-            <Route element={<ProtectedRoute />}>
-              <Route path="/chat" element={<ChatWindow />} />
-            </Route>
+              <Route element={<ProtectedRoute />}>
+                <Route path="/chat" element={<ChatWindow />} />
+              </Route>
 
               <Route path="/" element={<Navigate to="/login" replace />} />
             </Routes>
           </Suspense>
-      </BrowserRouter>
+        </BrowserRouter>
       </SocketProvider>
     </>
   )

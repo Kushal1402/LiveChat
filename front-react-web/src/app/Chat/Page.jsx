@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import ChatSidebar from "@/components/chat-components/ChatSideBar"
 import ChatInput from "@/components/chat-components/ChatInput"
 import ChatMessages from "@/components/chat-components/ChatMessage"
@@ -13,6 +13,8 @@ import ProfileUpdateDialog from "@/components/profile-components/ProfileUpdateDi
 import { useSelector } from "react-redux"
 import { Input } from "@/components/ui/input"
 import NewConversationDialog from "@/components/chat-components/NewConversationDialog"
+import { dispatch } from "@/store/store"
+import { setActiveConversation } from "@/store/slices/chatSlice"
 
 export default function ChatApplication() {
   const isMobile = useMobileView()
@@ -71,7 +73,6 @@ export default function ChatApplication() {
       lastSeen: "1d ago",
       unreadCount: 0,
     },
-    // New users below
     {
       id: "6",
       name: "Emily Clark",
@@ -289,14 +290,12 @@ export default function ChatApplication() {
   const [selectedUser, setSelectedUser] = useState(users[0])
 
   const handleSendMessage = (text) => {
-    console.log(text);
-    
     if (!text.trim() || !selectedUser) return
 
     const newMessage = {
       id: Date.now().toString(),
       userId: "me",
-      text : text,
+      text: text,
       timestamp: new Date().toISOString(),
       isRead: true,
     }
@@ -304,34 +303,61 @@ export default function ChatApplication() {
     setMessages([...messages, newMessage])
   }
 
-  const handleSelectUser = (user) => {
-    // Check if the user already exists in our list
-    const existingUserIndex = users.findIndex((u) => u.id === user.id)
+  useEffect(() => {
+    if (!selectedUser) return;
+  
+    const isNewUser = !users.find(u => u.id === selectedUser.id);
+    if (isNewUser) setUsers(prev => [...prev, selectedUser]);
+  
+    const updatedMsgs = messages.map(m =>
+      m.userId === selectedUser.id && !m.isRead
+        ? { ...m, isRead: true }
+        : m
+    );
+    setMessages(updatedMsgs);
+  
+    setUsers(prev => prev.map(u =>
+      u.id === selectedUser.id ? { ...u, unreadCount: 0 } : u
+    ));
+  
+    if (isMobile) setShowChat(true);
+  }, [selectedUser]);
 
-    if (existingUserIndex === -1) {
-      // This is a new user, add them to our list
-      setUsers([...users, user])
-    }
-
-    // Mark messages as read when selecting a user
-    const updatedMessages = messages.map((message) =>
-      message.userId === user.id && !message.isRead ? { ...message, isRead: true } : message,
-    )
-
-    setMessages(updatedMessages)
-
-    // Reset unread count for selected user
-    const updatedUsers = users.map((u) => (u.id === user.id ? { ...u, unreadCount: 0 } : u))
-
-    setUsers(updatedUsers)
+  const handleSelectUser = useCallback((user) => {
+    dispatch(setActiveConversation(user))
     setSelectedUser(user)
+  }, [dispatch])
 
-    // For mobile: close drawer and show chat
-    if (isMobile) {
-      setDrawerOpen(false)
-      setShowChat(true)
-    }
-  }
+  // const handleSelectUser = (user) => {
+  //   dispatch(setActiveConversation(user))
+
+  //   // Check if the user already exists in our list
+  //   const existingUserIndex = users.findIndex((u) => u.id === user.id)
+
+  //   if (existingUserIndex === -1) {
+  //     // This is a new user, add them to our list
+  //     setUsers([...users, user])
+  //   }
+
+  //   // Mark messages as read when selecting a user
+  //   const updatedMessages = messages.map((message) =>
+  //     message.userId === user.id && !message.isRead ? { ...message, isRead: true } : message,
+  //   )
+
+  //   setMessages(updatedMessages)
+
+  //   // Reset unread count for selected user
+  //   const updatedUsers = users.map((u) => (u.id === user.id ? { ...u, unreadCount: 0 } : u))
+
+  //   setUsers(updatedUsers)
+  //   setSelectedUser(user)
+
+  //   // For mobile: close drawer and show chat
+  //   if (isMobile) {
+  //     (false)
+  //     setShowChat(true)
+  //   }
+  // }
 
   const handleAddNewUser = (user) => {
     // Check if user already exists in the list
@@ -350,7 +376,12 @@ export default function ChatApplication() {
   }
 
   // Render sidebar content (used in both desktop and mobile)
-  const sidebarContent = <ChatSidebar users={users} selectedUser={selectedUser} onSelectUser={handleSelectUser} />
+  const sidebarContent =
+    <ChatSidebar
+      // users={users}
+      selectedUser={selectedUser}
+      onSelectUser={handleSelectUser}
+    />
 
 
 

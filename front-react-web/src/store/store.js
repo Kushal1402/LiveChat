@@ -1,13 +1,15 @@
 import { combineReducers, configureStore } from '@reduxjs/toolkit'
 import authReducer from '../store/slices/authSlice';
+import { conversationsReducer, usersReducer } from '../store/slices/chatSlice';
 import persistReducer from 'redux-persist/es/persistReducer';
 import storage from "redux-persist/lib/storage";
 import persistStore from 'redux-persist/es/persistStore';
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  conversations: conversationsReducer,
+  users : usersReducer
 });
-
 
 const persistConfig = {
   key: "root",
@@ -21,7 +23,7 @@ const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
-        serializableCheck: false,
+      serializableCheck: false,
     }),
 })
 const { dispatch } = store;
