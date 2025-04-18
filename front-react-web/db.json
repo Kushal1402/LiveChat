@@ -1,0 +1,116 @@
+{
+    "conversation": [
+      {
+        "_id": "1",
+        "sender_id": "u1",
+        "reciver_id": "u2",
+        "lastMessage": "Hey, how's it going?",
+        "lastMessageTime": "2025-04-18T10:00:00.000Z",
+        "unread_count": 2,
+        "sender_profile": "https://i.pravatar.cc/150?img=11",
+        "sender_status": true,
+        "sender_username": "Alice"
+      },
+      {
+        "_id": "2",
+        "sender_id": "u3",
+        "reciver_id": "u2",
+        "lastMessage": "Don't forget the meeting.",
+        "lastMessageTime": "2025-04-18T09:15:00.000Z",
+        "unread_count": 0,
+        "sender_profile": "https://i.pravatar.cc/150?img=12",
+        "sender_status": false,
+        "sender_username": "Bob"
+      },
+      {
+        "_id": "3",
+        "sender_id": "u4",
+        "reciver_id": "u2",
+        "lastMessage": "Can you send me the file?",
+        "lastMessageTime": "2025-04-18T11:20:00.000Z",
+        "unread_count": 1,
+        "sender_profile": "https://i.pravatar.cc/150?img=13",
+        "sender_status": true,
+        "sender_username": "Charlie"
+      },
+      {
+        "_id": "4",
+        "sender_id": "u5",
+        "reciver_id": "u2",
+        "lastMessage": "Let's catch up later.",
+        "lastMessageTime": "2025-04-17T18:30:00.000Z",
+        "unread_count": 0,
+        "sender_profile": "https://i.pravatar.cc/150?img=14",
+        "sender_status": false,
+        "sender_username": "Diana"
+      },
+      {
+        "_id": "5",
+        "sender_id": "u6",
+        "reciver_id": "u2",
+        "lastMessage": "Check out this link!",
+        "lastMessageTime": "2025-04-18T13:45:00.000Z",
+        "unread_count": 5,
+        "sender_profile": "https://i.pravatar.cc/150?img=15",
+        "sender_status": true,
+        "sender_username": "Ethan"
+      },
+      {
+        "_id": "6",
+        "sender_id": "u7",
+        "reciver_id": "u2",
+        "lastMessage": "Where are you?",
+        "lastMessageTime": "2025-04-18T14:00:00.000Z",
+        "unread_count": 3,
+        "sender_profile": "https://i.pravatar.cc/150?img=16",
+        "sender_status": true,
+        "sender_username": "Fiona"
+      },
+      {
+        "_id": "7",
+        "sender_id": "u8",
+        "reciver_id": "u2",
+        "lastMessage": "Thanks for the help!",
+        "lastMessageTime": "2025-04-16T21:10:00.000Z",
+        "unread_count": 0,
+        "sender_profile": "https://i.pravatar.cc/150?img=17",
+        "sender_status": false,
+        "sender_username": "George"
+      },
+      {
+        "_id": "8",
+        "sender_id": "u9",
+        "reciver_id": "u2",
+        "lastMessage": "Are we still meeting tomorrow?",
+        "lastMessageTime": "2025-04-18T08:00:00.000Z",
+        "unread_count": 1,
+        "sender_profile": "https://i.pravatar.cc/150?img=18",
+        "sender_status": true,
+        "sender_username": "Hannah"
+      },
+      {
+        "_id": "9",
+        "sender_id": "u10",
+        "reciver_id": "u2",
+        "lastMessage": "Good night!",
+        "lastMessageTime": "2025-04-17T23:59:00.000Z",
+        "unread_count": 0,
+        "sender_profile": "https://i.pravatar.cc/150?img=19",
+        "sender_status": false,
+        "sender_username": "Ian"
+      },
+      {
+        "_id": "10",
+        "sender_id": "u11",
+        "reciver_id": "u2",
+        "lastMessage": "Call me when you're free.",
+        "lastMessageTime": "2025-04-18T07:30:00.000Z",
+        "unread_count": 4,
+        "sender_profile": "https://i.pravatar.cc/150?img=20",
+        "sender_status": true,
+        "sender_username": "Jenna"
+      }
+    ]
+  }
+
+  

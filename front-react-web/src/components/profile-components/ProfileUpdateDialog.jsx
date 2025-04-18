@@ -7,8 +7,11 @@ import { useEffect } from "react"
 import { dispatch } from "@/store/store"
 import { getProfile } from "@/store/slices/authSlice"
 import SecurityTab from "./SecurityTab"
+import { useSelector } from "react-redux"
 
-const ProfileUpdateDialog = ({ isOpen, onClose, user }) => {
+const ProfileUpdateDialog = ({ isOpen, onClose }) => {
+  const { user } = useSelector((state) => state.auth)
+
   useEffect(() => {
     if (isOpen) {
       dispatch(getProfile())
