@@ -10,12 +10,7 @@ const media_handler = require("../../helper/media_handler");
 const SendMail = require("../../helper/email");
 const redisClient = require('../../utils/redis');
 
-let jwtr = new JWTR(redisClient);{
-    $sort: {
-      status: 1,      // Sort active users (status=1) first, then inactive (status=2)
-      createdAt: -1,  // Within each status group, newest first
-    },
-  },
+let jwtr = new JWTR(redisClient);
 
 // Get user details
 exports.getUserDetails = async (req, res, next) => {
