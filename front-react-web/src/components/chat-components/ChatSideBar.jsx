@@ -31,12 +31,15 @@ import LogoutDialog from "../profile-components/LogoutDIalog"
 import { fetchConversations, selectConversationListItems } from "@/store/slices/chatSlice"
 import MemoizedConversationItem from "./MemoizedConversationItem"
 
-export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
-  console.log(selectedUser);  
-  
+export default function ChatSidebar({ onSelectUser }) {
+
   const { activeConversation } = useSelector((state) => state.conversations)
+  const { user } = useSelector((state) => state.auth)
+
   console.log(activeConversation);
-  
+  console.log(user);
+
+
 
 
   // const conversations = useSelector(selectAllConversations);
@@ -162,7 +165,7 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
       <div className="p-4 border-b dark:border-gray-700">
         <div className="flex items-center justify-between">
           <h1 className="text-xl font-bold text-gray-900 dark:text-gray-100">Messages</h1>
-          <div className="flex">            
+          <div className="flex">
             <Button size="icon" variant="ghost" className="h-8 w-8 ml-1" onClick={() => setIsNewConversationOpen(true)}>
               <Plus className="h-4 w-4" />
             </Button>
@@ -180,8 +183,13 @@ export default function ChatSidebar({ users, selectedUser, onSelectUser }) {
 
       {/* Conversations List */}
       <div className="overflow-y-auto flex-1">
-         {conversations.map((conv) => (
-          <MemoizedConversationItem key={conv.id} conv={conv} selectedUser={selectedUser} onSelectUser={onSelectUser} />
+        {conversations.map((conv) => (
+          <MemoizedConversationItem
+            key={conv.id}
+            conv={conv}
+            activeConversation={activeConversation}
+            onSelectUser={onSelectUser}
+          />
         ))}
       </div>
 
