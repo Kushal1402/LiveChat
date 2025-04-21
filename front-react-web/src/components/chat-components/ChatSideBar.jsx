@@ -37,50 +37,61 @@ export default function ChatSidebar({ onSelectUser }) {
   const { addListener, removeListener } = useSocketContext();
   const { user } = useSelector((state) => state.auth)
   const { activeConversation } = useSelector((state) => state.conversations)
+  const conversationsLoaded = useSelector(state => state.conversations.loaded);
+  console.log(conversationsLoaded);
 
   // console.log(activeConversation);
   // console.log(user);
   useEffect(() => {
-    dispatch(messagesReceived(fakeMessages));
-    // const handleMessageReceived = (message) => {
-    //   // console.log('📨 Message received via socket:', message);
+    dispatch(fetchConversations());
+    // dispatch(messagesReceived(fakeMessages));
+  }, [dispatch]);
 
-    //   // dispatch(messageAdded(message)); // for add message in message slice 
+  // useEffect(() => {
+  //   if (conversationsLoaded) {
+  //     fakeMessages.forEach((msg) => {
+  //       dispatch(prependMessage({
+  //         conversationId: msg.conversationId,
+  //         messageId: msg.id
+  //       }));
+  //     });
+  //   }
+  // }, [conversationsLoaded, dispatch]);
 
-    //   // dispatch(prependMessage({
-    //   //   conversationId: message.conversationId,
-    //   //   messageId: message.id
-    //   // })); // for add messaage in conversion_list
 
-    //   dispatch(messageReceived(message)) // for add message in last_message 
+  useEffect(() => {
+    const handleMessageReceived = (message) => {
+      console.log('📨 Message received via socket:', message);
 
-    // };
-    dispatch(messagesReceived(fakeMessages)) // for add more... messages in message slice 
-    fakeMessages.forEach((msg) => {
+      dispatch(messageAdded(message)); // for add message in message slice 
+
       dispatch(prependMessage({
-        conversationId: msg.conversationId,
-        messageId: msg.id
+        conversationId: message.conversationId,
+        messageId: message.id
       })); // for add messaage in conversion_list
-    })
+
+      dispatch(messageReceived(message)) // for add message in last_message 
+
+    };
 
     // Add the socket listener
-    // addListener('message_received', handleMessageReceived);
+    addListener('message_received', handleMessageReceived);
 
 
     // Simulate incoming message manually
-    // const fakeMessage = {
-    //   id: 'mid2',
-    //   conversationId: '5',
-    //   text: '🔥 This is a fake message from u7',
-    //   senderId: 'u6',
-    //   receiverId: '67eb104b6d48a231b8de76bf',
-    //   createdAt: new Date().toISOString(),
-    // };
+    const fakeMessage = {
+      id: 'mid2',
+      conversationId: '5',
+      text: '🔥 This is a fake message from u7',
+      senderId: 'u6',
+      receiverId: '67eb104b6d48a231b8de76bf',
+      createdAt: new Date().toISOString(),
+    };
 
     // Delay it a bit to simulate async behavior
-    // setTimeout(() => {
-    // handleMessageReceived(fakeMessage);
-    // }, 2000);
+    setTimeout(() => {
+      handleMessageReceived(fakeMessage);
+    }, 2000);
 
     // Cleanup on unmount
     return () => {
@@ -102,9 +113,6 @@ export default function ChatSidebar({ onSelectUser }) {
   const [logoutModel, setLogoutModel] = useState(false)
   const { setTheme, theme } = useTheme()
 
-  useEffect(() => {
-    dispatch(fetchConversations())
-  }, [])
 
   const handleAddNewUser = (user) => {
     // Check if user already exists in the list

@@ -25,9 +25,9 @@ export const fetchConversations = createAsyncThunk(
             const users = conversationsData.map(item => ({
                 id: item.sender_id,
                 profileImage: item.sender_profile,
-                isOnline: item.sender_status,                
+                isOnline: item.sender_status,
                 username: item.sender_username,
-                lastActive : item.sender_lastActive,
+                lastActive: item.sender_lastActive,
             }));
 
             // Normalize conversations
@@ -55,7 +55,9 @@ export const fetchConversations = createAsyncThunk(
 
 const conversationsSlice = createSlice({
     name: 'conversations',
-    initialState: conversationsAdapter.getInitialState(),
+    initialState: conversationsAdapter.getInitialState({
+        loaded: false
+    }),
 
     // Reducers 
     reducers: {
@@ -108,6 +110,7 @@ const conversationsSlice = createSlice({
         },
         prependMessage: (state, { payload: { conversationId, messageId } }) => {
             const conversation = state.entities[conversationId];
+            console.log(conversation);
             if (conversation) {
                 if (!Array.isArray(conversation.messages)) {
                     conversation.messages = [];
@@ -125,6 +128,7 @@ const conversationsSlice = createSlice({
             })
             .addCase(fetchConversations.fulfilled, (state) => {
                 state.isFetchingConversations = false;
+                state.loaded = true
             })
             .addCase(fetchConversations.rejected, (state) => {
                 state.isFetchingConversations = false;
@@ -165,7 +169,7 @@ export const {
 // Base selectors
 export const selectMessageEntities = messagesAdapter.getSelectors(
     state => state.messages
-  ).selectEntities;
+).selectEntities;
 
 
 export const { selectById: selectUserById } = usersAdapter.getSelectors(state => state?.users);
@@ -212,32 +216,32 @@ export const selectConversationListItems = createSelector(
     }
 );
 
-export const selectActiveConversation = state => 
+export const selectActiveConversation = state =>
     state.conversations.activeConversation;
 
 
-     
+
 // Complex selector combining messages and conversations
 export const selectConversationMessages = createSelector(
     [
-      selectMessageEntities,
-      selectActiveConversation,
-      (state) => state.conversations.entities
+        selectMessageEntities,
+        selectActiveConversation,
+        (state) => state.conversations.entities
     ],
     (messages, activeConv, conversations) => {
         console.log(conversations[activeConv?.id]);
-                
-      const conversation = conversations[activeConv?.id];
-      if (!conversation) return [];
-      console.log(conversation.messages);
-      
-      
-      return conversation.messages
-        ?.map(id => messages[id])
-        ?.filter(Boolean)
-        ?.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) || [];
+
+        const conversation = conversations[activeConv?.id];
+        if (!conversation) return [];
+        console.log(conversation.messages);
+
+
+        return conversation.messages
+            ?.map(id => messages[id])
+            ?.filter(Boolean)
+            ?.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) || [];
     }
-  );
+);
 
 export const conversationsReducer = conversationsSlice.reducer;
 export const usersReducer = usersSlice.reducer;

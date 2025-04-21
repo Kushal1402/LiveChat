@@ -18,7 +18,7 @@ export default function ChatMessages({ activeConversation }) {
 
   const { user } = useSelector((state) => state.auth)
   console.log(user);
-  
+
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -40,6 +40,7 @@ export default function ChatMessages({ activeConversation }) {
   });
 
   const formatMessageTime = (timestamp) => {
+    console.log(timestamp);
     return format(new Date(timestamp), "h:mm a")
   }
 
@@ -58,6 +59,8 @@ export default function ChatMessages({ activeConversation }) {
     if (isYesterday(date)) return "Yesterday"
     return date
   }
+
+  console.log(conversionMessages);
 
   return (
     <div
