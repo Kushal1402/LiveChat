@@ -14,15 +14,18 @@ import { useSelector } from "react-redux"
 import { Input } from "@/components/ui/input"
 import NewConversationDialog from "@/components/chat-components/NewConversationDialog"
 import { dispatch } from "@/store/store"
-import { setActiveConversation } from "@/store/slices/chatSlice"
+import { markAsRead, setActiveConversation } from "@/store/slices/chatSlice"
+import { useSocketContext } from "@/context/SocketContext"
+import { formatLastSeen } from "@/utils/dateUtils"
 
 export default function ChatApplication() {
   const isMobile = useMobileView()
   const { setTheme } = useTheme()
   const [isProfileUpdateOpen, setIsProfileUpdateOpen] = useState(false)
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false)
-
   const { user } = useSelector((state) => state.auth)
+  const { activeConversation } = useSelector((state) => state.conversations)
+
 
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [showChat, setShowChat] = useState(false)
@@ -287,7 +290,7 @@ export default function ChatApplication() {
     },
   ]);
 
-  const [selectedUser, setSelectedUser] = useState(users[0])
+  const [selectedUser, setSelectedUser] = useState('')
 
   const handleSendMessage = (text) => {
     if (!text.trim() || !selectedUser) return
@@ -305,28 +308,35 @@ export default function ChatApplication() {
 
   useEffect(() => {
     if (!selectedUser) return;
-  
+
     const isNewUser = !users.find(u => u.id === selectedUser.id);
     if (isNewUser) setUsers(prev => [...prev, selectedUser]);
-  
+
     const updatedMsgs = messages.map(m =>
       m.userId === selectedUser.id && !m.isRead
         ? { ...m, isRead: true }
         : m
     );
     setMessages(updatedMsgs);
-  
+
     setUsers(prev => prev.map(u =>
       u.id === selectedUser.id ? { ...u, unreadCount: 0 } : u
     ));
-  
+
     if (isMobile) setShowChat(true);
   }, [selectedUser]);
 
   const handleSelectUser = useCallback((user) => {
     dispatch(setActiveConversation(user))
+    // dispatch(markAsRead(activeConversation?.id))
     setSelectedUser(user)
   }, [dispatch])
+
+  useEffect(() => {
+  if (activeConversation?.id) {
+    dispatch(markAsRead(activeConversation.id));
+  }
+}, [activeConversation, dispatch]);
 
   // const handleSelectUser = (user) => {
   //   dispatch(setActiveConversation(user))
@@ -378,8 +388,6 @@ export default function ChatApplication() {
   // Render sidebar content (used in both desktop and mobile)
   const sidebarContent =
     <ChatSidebar
-      // users={users}
-      selectedUser={selectedUser}
       onSelectUser={handleSelectUser}
     />
 
@@ -396,18 +404,18 @@ export default function ChatApplication() {
           </Button>
         )}
         <div className="flex items-center">
-          <UserAvatar user={selectedUser} size="lg" />
+          <UserAvatar user={activeConversation?.opponent} size="lg" />
           <div className="ml-3">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{selectedUser.name}</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{activeConversation?.opponent?.name}</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {selectedUser.status === "online" ? "Online" : `Last seen ${selectedUser.lastSeen}`}
+              {activeConversation?.opponent?.isOnline ? "Online" : `Last seen ${formatLastSeen(selectedUser?.opponent?.lastActive)}`}
             </p>
           </div>
         </div>
       </div>
       <ChatMessages
         messages={messages.filter((m) => m.userId === selectedUser.id || m.userId === "me")}
-        currentUser={selectedUser}
+        activeConversation={activeConversation}
       />
       <ChatInput onSendMessage={handleSendMessage} />
     </>

@@ -4,11 +4,13 @@ import { conversationsReducer, usersReducer } from '../store/slices/chatSlice';
 import persistReducer from 'redux-persist/es/persistReducer';
 import storage from "redux-persist/lib/storage";
 import persistStore from 'redux-persist/es/persistStore';
+import { messagesReducer } from './slices/messages.slice';
 
 const rootReducer = combineReducers({
   auth: authReducer,
   conversations: conversationsReducer,
-  users : usersReducer
+  users : usersReducer,
+  messages : messagesReducer
 });
 
 const persistConfig = {

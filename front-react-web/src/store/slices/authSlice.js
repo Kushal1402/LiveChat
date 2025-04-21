@@ -220,7 +220,7 @@ const initialState = {
     tempToken: null,
     tempEmail: null,
     tempUserData: null,
-    flowType: null
+    flowType: null,    
 };
 
 const authSlice = createSlice({
@@ -248,6 +248,7 @@ const authSlice = createSlice({
             state.token = null;
             localStorage.removeItem('vibe-token');
         },
+        
     },
     extraReducers: (builder) => {
         builder
@@ -290,6 +291,7 @@ const authSlice = createSlice({
                     state.token = action.payload.token;
                     localStorage.setItem('vibe-token', action.payload.token);
                     state.requiresOTP = false;
+                    state.user.isOnline = true
                 }
             })
             .addCase(login.rejected, (state, action) => {
@@ -328,6 +330,8 @@ const authSlice = createSlice({
                 state.tempUserData = null;
                 state.flowType = null;
                 state.requiresOTP = false
+                state.user.isOnline = true
+
             })
             .addCase(register.rejected, (state, action) => {
                 state.isLoading = false;

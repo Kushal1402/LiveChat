@@ -4,7 +4,7 @@ import { login } from "@/store/slices/authSlice"
 
 
 export default function UserAvatar({ user, size = "md" }) {
-  const initials = (user.name || user.username)
+  const initials = (user?.name || user?.username)
     ?.split(" ")
     ?.map((n) => n[0])
     .join("")
@@ -26,11 +26,11 @@ export default function UserAvatar({ user, size = "md" }) {
   return (
     <div className="relative">
       <Avatar className={sizeClasses[size]}>
-        <AvatarImage src={user.avatar || user.profile_picture || user.profileImage} alt={user.name || user.username} />
+        <AvatarImage src={user?.avatar || user?.profile_picture || user?.profileImage} alt={user?.name || user?.username} />
         <AvatarFallback>{initials}</AvatarFallback>
       </Avatar>
       <span
-        className={`absolute bottom-0 right-0 ${statusSizeClasses[size]} rounded-full border-2 border-white dark:border-gray-800 ${user.status  === "online" ? "bg-green-500" : "bg-gray-400" } ${user.isOnline ? "bg-green-500" : "bg-gray-400" }`}
+        className={`absolute bottom-0 right-0 ${statusSizeClasses[size]} rounded-full border-2 border-white dark:border-gray-800 ${user?.status  === "online" ? "bg-green-500" : "bg-gray-400" } ${user?.isOnline ? "bg-green-500" : "bg-gray-400" }`}
       ></span>
     </div>
   )

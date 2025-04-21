@@ -7,6 +7,7 @@ import { useSelector } from "react-redux";
 import { SocketProvider } from "./context/SocketContext";
 
 import LoadingScreen from "./components/ui/LoadingScreen";
+import useSocket from "./hooks/useSocket";
 
 const Login = lazy(() => import("./app/login/Login"));
 const ChatWindow = lazy(() => import("./app/Chat/Page"));
@@ -19,6 +20,8 @@ function App() {
   const { token } = useSelector((state) => state.auth)
   return (
     <>
+
+     
       <Toaster />
       <SocketProvider token={token}>
         <BrowserRouter>

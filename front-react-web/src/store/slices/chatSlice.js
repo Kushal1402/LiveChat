@@ -1,10 +1,11 @@
 import apiClient from "@/utils/apiClient";
 import { createAsyncThunk, createEntityAdapter, createSelector, createSlice } from "@reduxjs/toolkit";
 import axios from "axios";
-import { useSelector } from "react-redux";
 
 const conversationsAdapter = createEntityAdapter();
 const usersAdapter = createEntityAdapter();
+import { messagesAdapter } from './messages.slice';
+
 // const currentUserId = useSelector(state => state.auth.user?.id);
 
 
@@ -24,8 +25,9 @@ export const fetchConversations = createAsyncThunk(
             const users = conversationsData.map(item => ({
                 id: item.sender_id,
                 profileImage: item.sender_profile,
-                isOnline: item.sender_status,
+                isOnline: item.sender_status,                
                 username: item.sender_username,
+                lastActive : item.sender_lastActive,
             }));
 
             // Normalize conversations
@@ -51,8 +53,6 @@ export const fetchConversations = createAsyncThunk(
     }
 );
 
-
-
 const conversationsSlice = createSlice({
     name: 'conversations',
     initialState: conversationsAdapter.getInitialState(),
@@ -68,17 +68,17 @@ const conversationsSlice = createSlice({
             conversation.lastMessage = message;
             conversation.updatedAt = Date.now();
 
-            if (state.activeConversation !== message.conversationId) {
+            if (state.activeConversation?.id !== message.conversationId) {
                 conversation.unreadCount = (conversation.unreadCount || 0) + 1;
             }
         },
         setActiveConversation: (state, { payload }) => {
-            console.log("payload : ", payload);
-
             state.activeConversation = payload;
         },
         markAsRead: (state, { payload: conversationId }) => {
+
             const conversation = state.entities[conversationId];
+
             if (conversation) conversation.unreadCount = 0;
         },
         addTypingUser: (state, { payload: { conversationId, userId } }) => {
@@ -91,6 +91,28 @@ const conversationsSlice = createSlice({
             const conversation = state.entities[conversationId];
             if (conversation) {
                 conversation.typingUsers = conversation.typingUsers?.filter(id => id !== userId) || [];
+            }
+        },
+
+        messagesLoaded: (state, { payload: { conversationId, messages } }) => {
+
+            const conversation = state.entities[conversationId];
+            if (conversation) {
+                if (!Array.isArray(conversation.messages)) {
+                    conversation.messages = [];
+                }
+                conversation.messages = [
+                    ...new Set([...conversation.messages, ...messages.map(m => m.id)])
+                ]
+            }
+        },
+        prependMessage: (state, { payload: { conversationId, messageId } }) => {
+            const conversation = state.entities[conversationId];
+            if (conversation) {
+                if (!Array.isArray(conversation.messages)) {
+                    conversation.messages = [];
+                }
+                conversation.messages = [messageId, ...conversation.messages];
             }
         }
     },
@@ -122,6 +144,13 @@ const usersSlice = createSlice({
                 id: userId,
                 changes: { isOnline, lastSeen }
             });
+        },
+        profileUpdated: (state, action) => {
+            const { userId, username, profileImage } = action.payload;
+            usersAdapter.updateOne(state, {
+                id: userId,
+                changes: { username, profileImage }
+            });
         }
     }
 });
@@ -132,6 +161,11 @@ export const {
     selectAll: selectAllConversations,
     selectById: selectConversationById,
 } = conversationsAdapter.getSelectors(state => state.conversations)
+
+// Base selectors
+export const selectMessageEntities = messagesAdapter.getSelectors(
+    state => state.messages
+  ).selectEntities;
 
 
 export const { selectById: selectUserById } = usersAdapter.getSelectors(state => state?.users);
@@ -164,7 +198,8 @@ export const selectConversationListItems = createSelector(
                     id: opponent?.id,
                     name: opponent?.username || 'Unknown User',
                     avatar: opponent?.profileImage,
-                    isOnline: opponent?.isOnline || false
+                    isOnline: opponent?.isOnline || false,
+                    lastActive: opponent?.lastActive || "haha"
                 },
                 lastMessage,
                 unreadCount: conv.unreadCount,
@@ -177,6 +212,33 @@ export const selectConversationListItems = createSelector(
     }
 );
 
+export const selectActiveConversation = state => 
+    state.conversations.activeConversation;
+
+
+     
+// Complex selector combining messages and conversations
+export const selectConversationMessages = createSelector(
+    [
+      selectMessageEntities,
+      selectActiveConversation,
+      (state) => state.conversations.entities
+    ],
+    (messages, activeConv, conversations) => {
+        console.log(conversations[activeConv?.id]);
+                
+      const conversation = conversations[activeConv?.id];
+      if (!conversation) return [];
+      console.log(conversation.messages);
+      
+      
+      return conversation.messages
+        ?.map(id => messages[id])
+        ?.filter(Boolean)
+        ?.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) || [];
+    }
+  );
+
 export const conversationsReducer = conversationsSlice.reducer;
 export const usersReducer = usersSlice.reducer;
 
@@ -185,7 +247,9 @@ export const {
     setActiveConversation,
     markAsRead,
     addTypingUser,
-    removeTypingUser
+    removeTypingUser,
+    messagesLoaded,
+    prependMessage
 } = conversationsSlice.actions;
 
 export const { presenceUpdated } = usersSlice.actions;

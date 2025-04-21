@@ -4,11 +4,11 @@ import UserAvatar from "./UserAvatart";
 import deepEqual from "deep-equal";
 
 const MemoizedConversationItem = React.memo(
-    ({ conv, selectedUser, onSelectUser }) =>
+    ({ conv, activeConversation, onSelectUser }) =>
     (
         <div
             key={conv.id}
-            className={`flex items-center p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${selectedUser?.id === conv.id ? "bg-gray-200 dark:bg-gray-700" : ""
+            className={`flex items-center p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${activeConversation?.id === conv.id ? "bg-gray-200 dark:bg-gray-700" : ""
                 }`}
             onClick={() => onSelectUser(conv)}
         >
@@ -24,7 +24,7 @@ const MemoizedConversationItem = React.memo(
                 </div>
                 <div className="flex justify-between items-center gap-2">
                     <p className="text-sm text-gray-500 dark:text-gray-400 truncate flex-1">
-                        {conv.typingUsers ? 'Typing...' : conv.lastMessage.text}
+                        {conv.typingUsers ? 'Typing...' : ( conv.lastMessage?.text)}
                     </p>
                     {conv.unreadCount > 0 && (
                         <span className="bg-primary text-primary-foreground text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center shrink-0">
@@ -43,7 +43,7 @@ const MemoizedConversationItem = React.memo(
             prevProps.conv.typingUsers?.length === nextProps.conv.typingUsers?.length;
 
         const sameSelected =
-            prevProps.selectedUser?.id === nextProps.selectedUser?.id;
+            prevProps.activeConversation?.id === nextProps.activeConversation?.id;
 
         return sameConv && sameSelected;
     }

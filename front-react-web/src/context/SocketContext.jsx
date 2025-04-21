@@ -20,7 +20,7 @@
       if (!socket) return;
 
       socketRef.current = socket;
-
+      
       const handleConnect = () => {
         console.log("✅ Socket connected:", socket.id);
         setIsConnected(true);
@@ -55,6 +55,8 @@
         socketRef.current?.on(event, handler);
       }
       console.log(`📥 Listener added: ${event}`);
+      // console.log('handler :',handler);
+      
     };
 
     // Remove event listener
