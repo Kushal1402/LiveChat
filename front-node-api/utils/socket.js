@@ -1,16 +1,18 @@
 const { Server } = require("socket.io");
 const JWTR = require('jwt-redis').default;
 require("dotenv").config();
+const RedisClient = require('../utils/redis');
 
 const UserModel = require("../models/user");
+const ConversationModel = require("../models/conversations");
 
 let jwtr;
 let redisClient;
 
 // Create the Socket.IO instance
-const initSocket = (server, redis) => {
+const initSocket = (server) => {
 
-    redisClient = redis;
+    redisClient = RedisClient;
     jwtr = new JWTR(redisClient);
 
     const io = new Server(server, {
@@ -38,37 +40,149 @@ const initSocket = (server, redis) => {
 
     // Socket event handlers
     io.on("connection", async (socket) => {
-        console.log("✅ Authenticated client connected: " + socket.id + "  User:", socket.user);
+        console.log("✅ Authenticated client connected: " + socket.id + "\n  User: ", socket.user);
 
         let SocketUser = socket.user;
 
-        // Mark user as online in redis
-        await redisClient.set(`user:${SocketUser.id}:status`, "online");
-        await redisClient.set(`user:${SocketUser.id}:socket`, socket.id);
-        
-        // Update DB
-        await UserModel.findByIdAndUpdate(SocketUser.id, { status: true });
-        // Broadcast online
-        socket.broadcast.emit("user-online", { userId : SocketUser.id });
+        // Create a personal room for the user - execute create room & status updates in parallel
+        try {
+            const [UserExistingConversations] = await Promise.all([
+                // Get user conversations
+                ConversationModel.find({ participants: SocketUser.id }, "_id participants").sort({ updatedAt: -1 }),
+                
+                // Update redis status
+                redisClient.set(`user:${SocketUser.id}:status`, "online"),
+                redisClient.set(`user:${SocketUser.id}:socket`, socket.id),
+                
+                // Update DB status
+                UserModel.findByIdAndUpdate(SocketUser.id, { status: true })
+            ]);
+            // Join conversation rooms & store in Redis
+            if (UserExistingConversations.length) {
+                const roomIds = UserExistingConversations.map(convo => convo._id.toString());
+                
+                socket.join(roomIds);
+                
+                redisClient.set(`user:${SocketUser.id}:conversations`, JSON.stringify(roomIds));
+                
+                console.log(`User ${SocketUser.id} joined ${roomIds.length} rooms`, "\nand the rooms are : ", socket.rooms);
+            };
+            
+            // Notify friends that user is online
+            emitToConnectedFriends(io, SocketUser.id, UserExistingConversations, "isOnline", { userId: SocketUser.id, status: true, });
+        } catch (error) {
+            console.error("Error in connection handler:", error);
+        }
 
-        socket.on("message", (data) => {
-            console.log("New message arrived", data);
-            io.emit("message", { return_message: data });
-        });
+        // socket.on("message", (data) => {
+        //     console.log("New message arrived", data);
+        //     io.emit("message", { return_message: data });
+        // });
 
         // Handle client disconnect
         socket.on("disconnect", async () => {
             console.log("❌ Client disconnected: " + socket.id);
 
-            // Mark user as offline in redis
-            await redisClient.set(`user:${SocketUser.id}:status`, "offline");
-            await UserModel.findByIdAndUpdate(SocketUser.id, { status: false });
+            // Execute status updates in parallel
+            try {
+                // Update status in Redis and MongoDB
+                await Promise.all([
+                    // Update redis status
+                    redisClient.set(`user:${SocketUser.id}:status`, "offline"),
+                    redisClient.del(`user:${SocketUser.id}:socket`),
+                    
+                    // Update DB status
+                    UserModel.findByIdAndUpdate(SocketUser.id, { status: false, lastActive: new Date() })
+                ]);
 
-            socket.broadcast.emit("user-offline", { userId : SocketUser.id });
+                // Get conversations directly from Redis
+                const conversationsJson = await redisClient.get(`user:${SocketUser.id}:conversations`);
+                const roomIds = conversationsJson ? JSON.parse(conversationsJson) : [];
+
+                // If we need participant details for notifications
+                let UserExistingConversationsOffline = [];
+                if (roomIds.length > 0) {
+                    UserExistingConversationsOffline = await ConversationModel.find(
+                        { _id: { $in: roomIds } },
+                        "_id participants"
+                    );
+                };
+                
+                // Notify friends that user is offline
+                emitToConnectedFriends(io, SocketUser.id, UserExistingConversationsOffline, "isOnline", { userId: SocketUser.id, status: false, sender_lastActive: new Date() });
+                
+                // Leave conversation rooms
+                if (roomIds.length > 0) {
+                    socket.leave(roomIds);
+                    console.log(`User ${SocketUser.id} left ${roomIds.length} rooms`);
+
+                    // Remove conversation IDs from Redis
+                    await redisClient.del(`user:${SocketUser.id}:conversations`);
+                }
+            } catch (error) {
+                console.error("Error in disconnect handler:", error);
+            }
         });
     });
 
     return io;
 };
 
-module.exports = initSocket;
+// Function to emit status update events to connected friends
+function emitToConnectedFriends(io, userId, conversations, event, data) {
+    if (!conversations || !conversations.length) return;
+    
+    // Find all unique friend IDs across conversations
+    const friendIds = new Set();
+    conversations.forEach(convo => {
+        if (convo.participants && Array.isArray(convo.participants)) {
+            convo.participants.forEach(pid => {
+                const participantId = pid.toString();
+                if (participantId !== userId.toString()) {
+                    friendIds.add(participantId);
+                }
+            });
+        }
+    });
+    console.log("Friend IDs to notify:", friendIds);
+    
+    if (friendIds.size > 0) {
+        // Emit to all friends at once through their conversation rooms
+        Array.from(friendIds).forEach(friendId => {
+            io.to(friendId).emit(event, data);
+        });
+        console.log(`Event ${event} emitted to ${friendIds.size} friends`);
+    }
+};
+
+async function broadcastUserProfileUpdate (userId, updatedProfile) {
+    try {
+        redisClient = RedisClient;
+
+        // Get the user's conversation list from Redis
+        const redisData = await redisClient.get(`user:${userId}:conversations`);
+        if (!redisData) return; // Nothing to broadcast if no convos found
+
+        const conversationIds = redisData ? JSON.parse(redisData) : [];
+
+        let io = initSocket();
+        // console.log("conversationIds : ", conversationIds, "🚀 ~ io:", io);
+
+        // Broadcast to all relevant conversation rooms
+        conversationIds.forEach((conversationId) => {
+            io.to(conversationId).emit("user-profile-updated", {
+                userId,
+                updatedProfile,
+            });
+        });
+
+        console.log(`✅ Profile update broadcasted for user: ${userId}`);
+    } catch (error) {
+        console.error("❌ Error in broadcasting user profile update:", error);
+    }
+};
+
+module.exports = {
+    initSocket,
+    broadcastUserProfileUpdate,
+};
