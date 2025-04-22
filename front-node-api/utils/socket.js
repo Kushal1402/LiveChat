@@ -8,6 +8,7 @@ const ConversationModel = require("../models/conversations");
 
 let jwtr;
 let redisClient;
+let io;
 
 /**
  * Initializes Socket.IO with authentication middleware and event handlers
@@ -45,7 +46,7 @@ const initSocket = (server) => {
     redisClient = RedisClient;
     jwtr = new JWTR(redisClient);
 
-    const io = new Server(server, {
+    io = new Server(server, {
         cors: {
             origin: "*",
             methods: ["GET", "PUT", "POST"],
@@ -73,6 +74,8 @@ const initSocket = (server) => {
         console.log("✅ Authenticated client connected: " + socket.id + "\n  User: ", socket.user);
 
         let SocketUser = socket.user;
+        // Join user's personal room 
+        socket.join(SocketUser.id);
 
         // Create a personal room for the user - execute create room & status updates in parallel
         try {
@@ -185,7 +188,7 @@ function emitToConnectedFriends(io, userId, conversations, event, data) {
     }
 };
 
-async function broadcastUserProfileUpdate (userId, updatedProfile) {
+async function broadcastUserProfileUpdate(userId, updatedProfile) {
     try {
         redisClient = RedisClient;
 
@@ -194,9 +197,6 @@ async function broadcastUserProfileUpdate (userId, updatedProfile) {
         if (!redisData) return; // Nothing to broadcast if no convos found
 
         const conversationIds = redisData ? JSON.parse(redisData) : [];
-
-        let io = initSocket();
-        // console.log("conversationIds : ", conversationIds, "🚀 ~ io:", io);
 
         // Broadcast to all relevant conversation rooms
         conversationIds.forEach((conversationId) => {
