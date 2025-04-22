@@ -9,6 +9,36 @@ const ConversationModel = require("../models/conversations");
 let jwtr;
 let redisClient;
 
+/**
+ * Initializes Socket.IO with authentication middleware and event handlers
+ * 
+ * @param {Object} server - HTTP/HTTPS server instance to attach Socket.IO
+ * @returns {Object} io - Configured Socket.IO server instance
+ * 
+ * @description
+ * This function sets up a Socket.IO server with authentication middleware that verifies
+ * JWT tokens for each connection. It manages user presence tracking in Redis and MongoDB.
+ * 
+ * @events
+ * Socket.IO Server Events:
+ * - connection: Triggered when an authenticated client connects
+ *   - Updates user status to online in Redis and MongoDB
+ *   - Joins user to their conversation rooms
+ *   - Emits "isOnline" event to notify friends
+ * 
+ * Socket Events:
+ * - disconnect: Triggered when a client disconnects
+ *   - Updates user status to offline in Redis and MongoDB
+ *   - Removes socket ID and conversation mapping from Redis
+ *   - Emits "isOnline" event with offline status to notify friends
+ * - message: (Commented out) Would handle incoming messages
+ * 
+ * Emitted Events:
+ * - isOnline: Notifies friends about user's online/offline status
+ *   - Payload: { userId, status, sender_lastActive? }
+ * - user-profile-updated: Notifies conversations about user profile updates
+ *   - Payload: { userId, updatedProfile }
+ */
 // Create the Socket.IO instance
 const initSocket = (server) => {
 
