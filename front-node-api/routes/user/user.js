@@ -471,4 +471,53 @@ router.post('/forget-password-reset', UserAuthMiddleware, UserController.resetPa
  */
 router.post('/update-email', UserAuthMiddleware, UserController.updateEmail);
 
+/**
+ * @swagger
+ * /api/user/get-users:
+ *   get:
+ *     summary: Get all users for adding new friend
+ *     description: This endpoint allows to get all users for adding new friend
+ *     tags:
+ *       - User
+ *     security:
+ *       - BearerAdminAuth: []  # Requires authorization
+ *     parameters:
+ *       - in: query
+ *         name: username
+ *         schema:
+ *           type: string
+ *         required: false
+ *         description: Filter users by username
+ *         example: "john"
+ *     responses:
+ *       500:
+ *         description: Server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "An error occurred. Please try again."
+ *       200:
+ *         description: OK.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example : ok
+ *                 total_count:
+ *                  type: integer
+ *                  example: 10
+ *                 users:
+ *                  type: array
+ *                  items:
+ *                     type: object
+ */
+router.get('/get-users', UserAuthMiddleware, UserController.getUsersList);
+
 module.exports = router;

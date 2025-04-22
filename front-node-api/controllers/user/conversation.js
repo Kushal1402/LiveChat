@@ -43,7 +43,7 @@ exports.getConversations = async (req, res, next) => {
                     localField: "sender_id",
                     foreignField: "_id",
                     pipeline: [
-                        { $project: { _id: 1, username: 1, profile_picture: 1, status: 1 } }
+                        { $project: { _id: 1, username: 1, profile_picture: 1, status: 1, lastActive: 1 } }
                     ],
                     as: "sender"
                 }
@@ -100,7 +100,8 @@ exports.getConversations = async (req, res, next) => {
                     unread_count: { $ifNull: [{ $arrayElemAt: ["$unreadInfo.unread_count", 0] }, 0] },
                     sender_profile: "$sender.profile_picture",
                     sender_status: "$sender.status",
-                    sender_username: "$sender.username"
+                    sender_username: "$sender.username",
+                    sender_lastActive: "$sender.lastActive",
                 }
             },
             {

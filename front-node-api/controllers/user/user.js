@@ -9,6 +9,7 @@ const Helper = require("../../helper/index");
 const media_handler = require("../../helper/media_handler");
 const SendMail = require("../../helper/email");
 const redisClient = require('../../utils/redis');
+const { broadcastUserProfileUpdate } = require("../../utils/socket");
 
 let jwtr = new JWTR(redisClient);
 
@@ -74,6 +75,9 @@ exports.updateProfile = async (req, res, next) => {
         );
 
         if (result) {
+            // Broadcast the updated user profile to all connected clients
+            broadcastUserProfileUpdate(UserId, result);
+
             return res.status(200).json({
                 message: "Your details has been successfully updated",
                 result: result
@@ -522,6 +526,41 @@ exports.updateEmail = async (req, res, next) => {
             });
         }
     } catch (error) {
+        next(error);
+    }
+};
+
+// Get users list for search & adding new user
+exports.getUsersList = async (req, res, next) => {
+
+    const { username } = req.query;
+
+    const UserId = req.userData.id;
+
+    const match_obj = {};
+    match_obj._id = { $ne: UserId };
+
+    if (username && username !== "") {
+        match_obj.username = { $regex: username, $options: "i" }
+    };
+    // console.log("Match object : ", match_obj);
+
+    try {
+        const result = await UserModel.find(match_obj).select("_id username about email profile_picture")
+        
+        if (result.length === 0) {
+            return res.status(404).json({
+                message: "No user found",
+            });
+        };
+
+        return res.status(200).json({
+            message: "Ok",
+            result: result,
+            total_count: result.length || 0
+        });
+    }
+    catch (error) {
         next(error);
     }
 };
