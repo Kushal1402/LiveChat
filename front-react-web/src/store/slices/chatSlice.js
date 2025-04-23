@@ -5,6 +5,8 @@ import axios from "axios";
 const conversationsAdapter = createEntityAdapter();
 const usersAdapter = createEntityAdapter();
 import { messagesAdapter } from './messages.slice';
+import { dispatch } from "../store";
+import { steps } from "framer-motion";
 
 // const currentUserId = useSelector(state => state.auth.user?.id);
 
@@ -13,13 +15,14 @@ export const fetchConversations = createAsyncThunk(
     'chat/fetchConversations',
     async (_, { dispatch, rejectWithValue }) => {
         try {
-            const response = await axios.get('http://localhost:5000/conversation', {
-                timeout: 10000,
-                headers: {
-                    'Content-Type': 'application/json',
-                }
-            });
-            const conversationsData = response.data;
+            // const response = await axios.get('http://localhost:5000/conversation', {
+            //     timeout: 10000,
+            //     headers: {
+            //         'Content-Type': 'application/json',
+            //     }
+            // });
+            const response = await apiClient.get('/conversation');
+            const conversationsData = response.data.data;
 
             // Normalize users (senders)
             const users = conversationsData.map(item => ({
@@ -33,7 +36,7 @@ export const fetchConversations = createAsyncThunk(
             // Normalize conversations
             const conversations = conversationsData.map(item => ({
                 id: item._id,
-                participants: [item.sender_id, item.reciver_id],
+                participants: [item.sender_id, item.receiver_id],
                 lastMessage: {
                     text: item.lastMessage,
                     createdAt: item.lastMessageTime,
@@ -53,16 +56,35 @@ export const fetchConversations = createAsyncThunk(
     }
 );
 
+export const fetchNewUsers = createAsyncThunk(
+    'chat/fetchUsers',
+    async (name, { rejectWithValue }) => {
+        try {
+            const response = await apiClient.get(`/user/get-users?username=${name || ''}`);
+            return response?.data?.result
+        } catch (error) {
+            console.log(error);
+            return rejectWithValue(error || 'new user falies');
+        }
+    }
+)
+
 const conversationsSlice = createSlice({
     name: 'conversations',
     initialState: conversationsAdapter.getInitialState({
-        loaded: false
+        loaded: false,
+        isFetchingUsers: false,
+        newUsers: []
     }),
 
     // Reducers 
     reducers: {
         conversationsReceived: conversationsAdapter.setAll,
         conversationUpdated: conversationsAdapter.updateOne,
+        addNewConversation: conversationsAdapter.addOne,
+        resetActiveConversation: (state) => {
+            state.activeConversation = null
+        },
         messageReceived: (state, { payload: message }) => {
             const conversation = state.entities[message.conversationId];
             if (!conversation) return;
@@ -117,6 +139,10 @@ const conversationsSlice = createSlice({
                 }
                 conversation.messages = [messageId, ...conversation.messages];
             }
+        },
+
+        clearNewUsers: (state) => {
+            state.newUsers = []
         }
     },
 
@@ -133,6 +159,19 @@ const conversationsSlice = createSlice({
             .addCase(fetchConversations.rejected, (state) => {
                 state.isFetchingConversations = false;
             })
+
+            // Fetching Users 
+            .addCase(fetchNewUsers.pending, (state, action) => {
+                state.isFetchingUsers = true;
+            })
+            .addCase(fetchNewUsers.fulfilled, (state, action) => {
+                state.isFetchingUsers = false;
+                state.newUsers = action.payload
+            })
+            .addCase(fetchNewUsers.rejected, (state, action) => {
+                state.isFetchingUsers = false;
+            })
+
     }
 })
 
@@ -143,20 +182,30 @@ const usersSlice = createSlice({
         userUpdated: usersAdapter.updateOne,
         usersReceived: usersAdapter.setAll,
         presenceUpdated: (state, action) => {
-            const { userId, isOnline, lastSeen } = action.payload;
+
+            const { userId, status, sender_lastActive } = action.payload;
+            const isOnline = status;
+            const lastSeen = status ? null : sender_lastActive || null;
+
             usersAdapter.updateOne(state, {
                 id: userId,
                 changes: { isOnline, lastSeen }
             });
         },
         profileUpdated: (state, action) => {
-            const { userId, username, profileImage } = action.payload;
+            console.log(action.payload);
+
+            const { userId } = action.payload;
+            const username = action?.payload?.updatedProfile?.username;
+            const profileImage = action?.payload?.updatedProfile?.profile_picture;
+
             usersAdapter.updateOne(state, {
                 id: userId,
                 changes: { username, profileImage }
             });
         }
-    }
+    },
+
 });
 
 
@@ -164,6 +213,7 @@ const usersSlice = createSlice({
 export const {
     selectAll: selectAllConversations,
     selectById: selectConversationById,
+    selectIds: selectConversationIds,
 } = conversationsAdapter.getSelectors(state => state.conversations)
 
 // Base selectors
@@ -216,6 +266,15 @@ export const selectConversationListItems = createSelector(
     }
 );
 
+
+// Custom selector to find conversation by participant
+export const selectConversationByUserId = createSelector(
+    [selectAllConversations, (state, userId) => userId],
+    (conversations, userId) => conversations.find(conv =>
+        conv.participants.some(p => p === userId) 
+    )
+)
+
 export const selectActiveConversation = state =>
     state.conversations.activeConversation;
 
@@ -233,10 +292,10 @@ export const selectConversationMessages = createSelector(
 
         const conversation = conversations[activeConv?.id];
         if (!conversation) return [];
-        console.log(conversation.messages);
+        console.log(conversation?.messages);
 
 
-        return conversation.messages
+        return conversation?.messages
             ?.map(id => messages[id])
             ?.filter(Boolean)
             ?.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)) || [];
@@ -253,8 +312,12 @@ export const {
     addTypingUser,
     removeTypingUser,
     messagesLoaded,
-    prependMessage
+    prependMessage,
+    clearNewUsers
 } = conversationsSlice.actions;
 
-export const { presenceUpdated } = usersSlice.actions;
+export const {
+    profileUpdated,
+    presenceUpdated
+} = usersSlice.actions;
 

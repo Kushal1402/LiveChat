@@ -17,7 +17,6 @@ export default function ChatMessages({ activeConversation }) {
   const isMobile = useMobileView()
 
   const { user } = useSelector((state) => state.auth)
-  console.log(user);
 
 
   // Auto-scroll to bottom when messages change

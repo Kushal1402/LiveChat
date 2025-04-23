@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { useEffect, useState } from "react"
 import NewConversationDialog from "./NewConversationDialog"
 import UserAvatar from "./UserAvatart"
-import { dispatch } from "@/store/store"
+import { dispatch, store } from "@/store/store"
 import { logoutUser, selectIsLoggingOut } from "@/store/slices/authSlice"
 import { toast } from "@/hooks/use-toast"
 import {
@@ -28,12 +28,13 @@ import { useTheme } from "next-themes"
 import { useSelector } from "react-redux"
 import ProfileUpdateDialog from "../profile-components/ProfileUpdateDialog"
 import LogoutDialog from "../profile-components/LogoutDIalog"
-import { fetchConversations, messageReceived, prependMessage, selectConversationListItems } from "@/store/slices/chatSlice"
+import { fetchConversations, messageReceived, prependMessage, presenceUpdated, profileUpdated, selectConversationByUserId, selectConversationListItems } from "@/store/slices/chatSlice"
 import MemoizedConversationItem from "./MemoizedConversationItem"
 import { fakeMessages, messageAdded, messagesReceived } from "@/store/slices/messages.slice"
 import { useSocketContext } from "@/context/SocketContext"
+import socket from "@/utils/socket"
 
-export default function ChatSidebar({ onSelectUser }) {
+export default function ChatSidebar({ onSelectConversation }) {
   const { addListener, removeListener } = useSocketContext();
   const { user } = useSelector((state) => state.auth)
   const { activeConversation } = useSelector((state) => state.conversations)
@@ -74,36 +75,59 @@ export default function ChatSidebar({ onSelectUser }) {
 
     };
 
+    const handlePresenceUpdated = (presence) => {
+      console.log('👤 Presence updated:', presence);
+      dispatch(presenceUpdated(presence));
+    };
+
+    const handleUserProfileUpdate = (profile) => {
+      console.log('👤 User profile updated:', profile);
+      dispatch(profileUpdated(profile));
+    };
+
     // Add the socket listener
     addListener('message_received', handleMessageReceived);
+    addListener('isOnline', handlePresenceUpdated);
+    addListener('user-profile-updated', handleUserProfileUpdate)
+
 
 
     // Simulate incoming message manually
-    const fakeMessage = {
-      id: 'mid2',
-      conversationId: '5',
-      text: '🔥 This is a fake message from u7',
-      senderId: 'u6',
-      receiverId: '67eb104b6d48a231b8de76bf',
-      createdAt: new Date().toISOString(),
-    };
+    // const fakeMessage = {
+    //   id: 'mid2',
+    //   conversationId: '5',
+    //   text: '🔥 This is a fake message from u7',
+    //   senderId: 'u6',
+    //   receiverId: '67eb104b6d48a231b8de76bf',
+    //   createdAt: new Date().toISOString(),
+    // };
 
     // Delay it a bit to simulate async behavior
-    setTimeout(() => {
-      handleMessageReceived(fakeMessage);
-    }, 2000);
+    // setTimeout(() => {
+    //   handleMessageReceived(fakeMessage);
+    // }, 2000);
 
     // Cleanup on unmount
     return () => {
       removeListener('message_received');
+      removeListener('isOnline');
+      removeListener('user-profile-update');
+
     };
-  }, [addListener, removeListener, dispatch]);
+  }, [dispatch]);
 
 
-
-  // const conversations = useSelector(selectAllConversations);
-  // const conversations = useSelector(selectEnrichedConversations);
   const conversations = useSelector(selectConversationListItems);
+
+  const handleNewSelectedConversation = (user) => {
+    console.log(user);    
+    const state = store.getState()
+    const existingConversation = selectConversationByUserId(state, user._id)
+    if (existingConversation) {
+      console.log(existingConversation);     
+    }
+  }
+
 
   // console.log(conversations);
   const isLoggingOut = useSelector(selectIsLoggingOut)
@@ -113,17 +137,6 @@ export default function ChatSidebar({ onSelectUser }) {
   const [logoutModel, setLogoutModel] = useState(false)
   const { setTheme, theme } = useTheme()
 
-
-  const handleAddNewUser = (user) => {
-    // Check if user already exists in the list
-    // const existingUser = users.find((u) => u.id === user.id)
-    // if (!existingUser) {
-    //   // In a real app, you would call a function passed from the parent to add the user
-    //   onSelectUser(user)
-    // } else {
-    //   onSelectUser(existingUser)
-    // }
-  }
 
   const handleLogout = async () => {
 
@@ -244,7 +257,7 @@ export default function ChatSidebar({ onSelectUser }) {
             key={conv.id}
             conv={conv}
             activeConversation={activeConversation}
-            onSelectUser={onSelectUser}
+            onSelectConversation={onSelectConversation}
           />
         ))}
       </div>
@@ -253,7 +266,7 @@ export default function ChatSidebar({ onSelectUser }) {
       <NewConversationDialog
         isOpen={isNewConversationOpen}
         onClose={() => setIsNewConversationOpen(false)}
-        onSelectUser={handleAddNewUser}
+        onSelectNewConversation={handleNewSelectedConversation}
       />
 
       <ProfileUpdateDialog
