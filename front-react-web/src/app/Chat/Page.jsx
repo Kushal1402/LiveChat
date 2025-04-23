@@ -13,7 +13,7 @@ import ProfileUpdateDialog from "@/components/profile-components/ProfileUpdateDi
 import { useSelector } from "react-redux"
 import { Input } from "@/components/ui/input"
 import NewConversationDialog from "@/components/chat-components/NewConversationDialog"
-import { dispatch } from "@/store/store"
+import { dispatch, store } from "@/store/store"
 import { markAsRead, setActiveConversation } from "@/store/slices/chatSlice"
 import { useSocketContext } from "@/context/SocketContext"
 import { formatLastSeen } from "@/utils/dateUtils"
@@ -327,57 +327,21 @@ export default function ChatApplication() {
   }, [selectedUser]);
 
   const handleSelectUser = useCallback((user) => {
+    console.log(user);
+
     dispatch(setActiveConversation(user))
     // dispatch(markAsRead(activeConversation?.id))
     setSelectedUser(user)
   }, [dispatch])
 
   useEffect(() => {
-  if (activeConversation?.id) {
-    dispatch(markAsRead(activeConversation.id));
-  }
-}, [activeConversation, dispatch]);
-
-  // const handleSelectUser = (user) => {
-  //   dispatch(setActiveConversation(user))
-
-  //   // Check if the user already exists in our list
-  //   const existingUserIndex = users.findIndex((u) => u.id === user.id)
-
-  //   if (existingUserIndex === -1) {
-  //     // This is a new user, add them to our list
-  //     setUsers([...users, user])
-  //   }
-
-  //   // Mark messages as read when selecting a user
-  //   const updatedMessages = messages.map((message) =>
-  //     message.userId === user.id && !message.isRead ? { ...message, isRead: true } : message,
-  //   )
-
-  //   setMessages(updatedMessages)
-
-  //   // Reset unread count for selected user
-  //   const updatedUsers = users.map((u) => (u.id === user.id ? { ...u, unreadCount: 0 } : u))
-
-  //   setUsers(updatedUsers)
-  //   setSelectedUser(user)
-
-  //   // For mobile: close drawer and show chat
-  //   if (isMobile) {
-  //     (false)
-  //     setShowChat(true)
-  //   }
-  // }
-
-  const handleAddNewUser = (user) => {
-    // Check if user already exists in the list
-    const existingUser = users.find((u) => u.id === user.id)
-    if (!existingUser) {
-      // In a real app, you would call a function passed from the parent to add the user
-      handleSelectUser(user)
-    } else {
-      handleSelectUser(existingUser)
+    if (activeConversation?.id) {
+      dispatch(markAsRead(activeConversation.id));
     }
+  }, [activeConversation, dispatch]);
+
+  const handleSelectConversation = (user) => {
+    handleSelectUser(user)   
   }
 
   // Handle back button on mobile
@@ -388,7 +352,7 @@ export default function ChatApplication() {
   // Render sidebar content (used in both desktop and mobile)
   const sidebarContent =
     <ChatSidebar
-      onSelectUser={handleSelectUser}
+      onSelectConversation={handleSelectConversation}
     />
 
 
@@ -564,17 +528,17 @@ export default function ChatApplication() {
           </div>
         )}
 
-        <ProfileUpdateDialog
+        {/* <ProfileUpdateDialog
           isOpen={isProfileUpdateOpen}
           onClose={() => setIsProfileUpdateOpen(false)}
           user={user}
-        />
+        /> */}
 
-        <NewConversationDialog
+        {/* <NewConversationDialog
           isOpen={isNewConversationOpen}
           onClose={() => setIsNewConversationOpen(false)}
           onSelectUser={handleAddNewUser}
-        />
+        /> */}
       </div>
     )
   }
@@ -585,17 +549,6 @@ export default function ChatApplication() {
       {sidebarContent}
       <div className="flex flex-col flex-1 overflow-hidden">{chatContent}</div>
     </div>
-    <ProfileUpdateDialog
-      isOpen={isProfileUpdateOpen}
-      onClose={() => setIsProfileUpdateOpen(false)}
-      user={user}
-    />
-
-    <NewConversationDialog
-      isOpen={isNewConversationOpen}
-      onClose={() => setIsNewConversationOpen(false)}
-      onSelectUser={handleAddNewUser}
-    />
   </>
   )
 

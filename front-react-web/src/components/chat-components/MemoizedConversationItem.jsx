@@ -4,13 +4,13 @@ import UserAvatar from "./UserAvatart";
 import deepEqual from "deep-equal";
 
 const MemoizedConversationItem = React.memo(
-    ({ conv, activeConversation, onSelectUser }) =>
+    ({ conv, activeConversation, onSelectConversation }) =>
     (
         <div
             key={conv.id}
             className={`flex items-center p-4 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-700 ${activeConversation?.id === conv.id ? "bg-gray-200 dark:bg-gray-700" : ""
                 }`}
-            onClick={() => onSelectUser(conv)}
+            onClick={() => onSelectConversation(conv)}
         >
             <UserAvatar user={conv.opponent} size="lg" />
             <div className="ml-3 flex-1 overflow-hidden">
@@ -35,20 +35,28 @@ const MemoizedConversationItem = React.memo(
             </div>
         </div>
     ),
-    (prevProps, nextProps) => {
-        const sameConv =
-            prevProps.conv.id === nextProps.conv.id &&
-            prevProps.conv.lastMessage?.text === nextProps.conv.lastMessage?.text &&
-            prevProps.conv.unreadCount === nextProps.conv.unreadCount &&
-            prevProps.conv.typingUsers?.length === nextProps.conv.typingUsers?.length;
+    // (prevProps, nextProps) => {
+    //     const sameConv =
+    //         prevProps.conv.id === nextProps.conv.id &&
+    //         prevProps.conv.lastMessage?.text === nextProps.conv.lastMessage?.text &&
+    //         prevProps.conv.unreadCount === nextProps.conv.unreadCount &&
+    //         prevProps.conv.typingUsers?.length === nextProps.conv.typingUsers?.length &&
+    //         // prevProps.conv?.opponent?.isOnline === nextProps.conv?.opponent?.isOnline
+    //         // prevProps.conv?.opponent?.name  === nextProps.conv?.opponent?.name && 
+    //         // prevProps.conv?.opponent?.avatar  === nextProps.conv?.opponent?.avatar 
+    //         prevProps.conv?.opponent  === nextProps.conv?.opponent
 
-        const sameSelected =
-            prevProps.activeConversation?.id === nextProps.activeConversation?.id;
 
-        return sameConv && sameSelected;
-    }
 
-    // (prev, next) => deepEqual(prev.conv, next.conv) // Use deep comparison
+    //     const sameSelected =
+    //         prevProps.activeConversation?.id === nextProps.activeConversation?.id;
+
+    //     return sameConv && sameSelected;
+    // }
+
+    (prevProps, nextProps) => 
+        deepEqual(prevProps.conv, nextProps.conv) && 
+        prevProps.activeConversation?.id === nextProps.activeConversation?.id
 );
 
 export default MemoizedConversationItem

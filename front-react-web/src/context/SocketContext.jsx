@@ -1,6 +1,6 @@
   // context/SocketContext.js
   import useSocket from '@/hooks/useSocket';
-  import { createContext, useContext, useEffect, useRef, useState } from 'react';
+  import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 
   // Create socket context
   const SocketContext = createContext(null);
@@ -47,20 +47,20 @@
         listenersRef.current.clear();
       };
     }, [socket]);
+    
 
 
-    const addListener = (event, handler) => {
+    const addListener = useCallback((event, handler) => {
       listenersRef.current.set(event, handler);
       if (socketRef.current) {
         socketRef.current?.on(event, handler);
       }
       console.log(`📥 Listener added: ${event}`);
-      // console.log('handler :',handler);
-      
-    };
+      // console.log('handler :',handler);      
+    },[socket])
 
     // Remove event listener
-    const removeListener = (event) => {
+    const removeListener = useCallback((event) => {
       const handler = listenersRef.current.get(event);
       if (!handler) return;
 
@@ -69,7 +69,7 @@
       }
       listenersRef.current.delete(event);
       console.log(`🗑️ Listener removed: ${event}`);
-    };
+    },[socket])
 
 
     return (
