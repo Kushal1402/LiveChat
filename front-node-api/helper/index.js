@@ -1,4 +1,5 @@
 const TwoFactorAuthenticationModel = require("../models/twoFactorAuthentication");
+const mongoose = require("mongoose");
 
 exports.generateRandomString = async (length = 6, isNumber) => {
     var result = '';
@@ -43,3 +44,11 @@ exports.deleteOTP = async (token, code) => {
   }
   console.log("OTP deleted");
 };
+
+exports.isValidObjectId = (id) => {
+  return mongoose.Types.ObjectId.isValid(id);
+}
+
+exports.isNonEmptyString = (str) => {
+  return typeof str === 'string' && str.trim().length > 0;
+}
