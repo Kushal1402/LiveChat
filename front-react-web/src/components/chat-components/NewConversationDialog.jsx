@@ -1,77 +1,48 @@
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Search, UserPlus } from "lucide-react"
+import { dispatch } from "@/store/store"
+import { clearNewUsers, fetchNewUsers } from "@/store/slices/chatSlice"
+import { useSelector } from "react-redux"
 
 
-export default function NewConversationDialog({ isOpen, onClose, onSelectUser }) {
-  const [searchQuery, setSearchQuery] = useState("")
+export default function NewConversationDialog({ isOpen, onClose, onSelectNewConversation }) {
+  const [searchQuery, setSearchQuery] = useState(null)
+  const { newUsers, isFetchingUsers } = useSelector((state) => state.conversations)
 
-  // Sample global users data - in a real app, this would come from an API
-  const globalUsers = [
-    {
-      id: "101",
-      name: "Emma Thompson",
-      email: "emma.thompson@example.com",
-      avatar: "/placeholder.svg?height=40&width=40",
-      status: "online",
-      lastSeen: "Just now",
-      unreadCount: 0,
-    },
-    {
-      id: "102",
-      name: "David Chen",
-      email: "david.chen@example.com",
-      avatar: "/placeholder.svg?height=40&width=40",
-      status: "offline",
-      lastSeen: "3h ago",
-      unreadCount: 0,
-    },
-    {
-      id: "103",
-      name: "Sophia Rodriguez",
-      email: "sophia.r@example.com",
-      avatar: "/placeholder.svg?height=40&width=40",
-      status: "online",
-      lastSeen: "Just now",
-      unreadCount: 0,
-    },
-    {
-      id: "104",
-      name: "James Wilson",
-      email: "james.wilson@example.com",
-      avatar: "/placeholder.svg?height=40&width=40",
-      status: "offline",
-      lastSeen: "1d ago",
-      unreadCount: 0,
-    },
-    {
-      id: "105",
-      name: "Olivia Parker",
-      email: "olivia.p@example.com",
-      avatar: "/placeholder.svg?height=40&width=40",
-      status: "online",
-      lastSeen: "5m ago",
-      unreadCount: 0,
-    },
-  ]
 
-  // Filter users based on search query
-  const filteredUsers = globalUsers.filter(
-    (user) =>
-      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchQuery.toLowerCase()),
-  )
+  useEffect(() => {
+    if (isOpen) {
+      const debounceTimer = setTimeout(() => {
+        try {
+          dispatch(fetchNewUsers(searchQuery))
+        } catch (error) {
+          console.log(error);
+        }
+      }, 300);
+      return () => {
+        clearTimeout(debounceTimer)
+      };
+    }
+  }, [searchQuery, isOpen, dispatch]);
 
-  const handleSelectUser = (user) => {
-    onSelectUser(user)
+
+  const handleSelectNewUser = (user) => {
+    onSelectNewConversation(user)
+    handleClose()
+  }
+
+  const handleClose = () => {
+    setSearchQuery(null)
+    dispatch(clearNewUsers())
     onClose()
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-[90%] sm:max-w-md sm:p-4">
         <DialogHeader>
           <DialogTitle className="text-xl">New message</DialogTitle>
@@ -92,36 +63,55 @@ export default function NewConversationDialog({ isOpen, onClose, onSelectUser })
         </div>
 
         <div className="mt-4 max-h-[300px] overflow-y-auto">
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center p-3 hover:bg-accent rounded-md cursor-pointer transition-colors"
-                onClick={() => handleSelectUser(user)}
-              >
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback>
-                    {user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")
-                      .toUpperCase()
-                      .substring(0, 2)}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="ml-3 overflow-hidden">
-                  <p className="text-sm font-medium">{user.name}</p>
-                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+          {
+            isFetchingUsers
+              ? (
+                <div className="flex justify-center items-center py-10">
+                  <span className="text-sm text-muted-foreground">Loading...</span>
                 </div>
-                <Button size="sm" variant="ghost" className="ml-auto">
-                  <UserPlus className="h-4 w-4" />
-                </Button>
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-sm text-muted-foreground py-4">No users found matching "{searchQuery}"</p>
-          )}
+              )
+              :
+              (
+                newUsers.length > 0
+              )
+                ? (
+                  newUsers.map((user) => (
+                    <div
+                      key={user._id}
+                      className="flex items-center p-3 hover:bg-accent rounded-md cursor-pointer transition-colors"
+                      onClick={() => handleSelectNewUser(user)}
+                    >
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src={user.profile_picture} alt={user.username} />
+                        <AvatarFallback>
+                          {user.username
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .toUpperCase()
+                            .substring(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="ml-3 overflow-hidden">
+                        <p className="text-sm font-medium">{user.username}</p>
+                        <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                      </div>
+                      <Button size="sm" variant="ghost" className="ml-auto">
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )))
+                :
+                (searchQuery && newUsers.length == 0) ? (
+                  <div className="flex justify-center items-center py-10">
+                    <span className="text-sm text-muted-foreground">
+                      No results found for "<span className="font-medium">{searchQuery}</span>"
+                    </span>
+                  </div>
+                ) : null
+
+
+          }
         </div>
       </DialogContent>
     </Dialog>
