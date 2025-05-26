@@ -6,7 +6,9 @@ import { Provider } from 'react-redux'
 import { persistor, store } from './store/store'
 import { PersistGate } from 'redux-persist/integration/react'
 import { ThemeProvider } from "next-themes"  // Import ThemeProvider
+import { setupInterceptors } from './utils/apiClient'
 
+setupInterceptors(store)
 createRoot(document.getElementById('root')).render(
   // <StrictMode>
     <Provider store={store}>

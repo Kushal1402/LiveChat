@@ -223,7 +223,7 @@ export const fakeMessages = [
 
 
 export const messagesAdapter = createEntityAdapter({
-  selectId: (message) => message.id,
+  selectId: (message) => message._id,
   sortComparer: (a, b) => new Date(a.createdAt) - new Date(b.createdAt),
 });
 
@@ -250,7 +250,7 @@ const messagesSlice = createSlice({
     }
   }),
 
-  reducers: {   
+  reducers: {
     messageAdded: messagesAdapter.addOne,
     messagesReceived: messagesAdapter.addMany,
     messageUpdated: messagesAdapter.updateOne,
@@ -259,6 +259,31 @@ const messagesSlice = createSlice({
       state.pagination[conversationId] = pagination;
     },
     resetMessages: messagesAdapter.removeAll,
+    addTempMessage: (state, { payload }) => {
+      messagesAdapter.addOne(state, {
+        ...payload,
+        status: 'sending',
+        isTemp: true
+      });
+    },
+    confirmMessage: (state, { payload: { tempId, serverMessage } }) => {
+      messagesAdapter.updateOne(state, {
+        id: tempId,
+        changes: {
+          ...serverMessage,
+          status: 'delivered',
+          isTemp: false
+        }
+      });
+    },
+    markMessageFailed: (state, { payload: tempId }) => {
+      messagesAdapter.updateOne(state, {
+        id: tempId,
+        changes: {
+          status: 'failed'
+        }
+      });
+    }
   },
   extraReducers: (builder) => {
     builder
@@ -300,7 +325,10 @@ export const {
   messageRemoved,
   setPagination,
   resetMessages,
-  addFakeMessages
+  addFakeMessages,
+  addTempMessage,
+  confirmMessage,
+  markMessageFailed
 } = messagesSlice.actions;
 
 export const messagesReducer = messagesSlice.reducer;

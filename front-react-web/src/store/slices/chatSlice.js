@@ -6,7 +6,6 @@ const conversationsAdapter = createEntityAdapter();
 const usersAdapter = createEntityAdapter();
 import { messagesAdapter } from './messages.slice';
 import { dispatch } from "../store";
-import { steps } from "framer-motion";
 
 // const currentUserId = useSelector(state => state.auth.user?.id);
 
@@ -38,7 +37,7 @@ export const fetchConversations = createAsyncThunk(
                 id: item._id,
                 participants: [item.sender_id, item.receiver_id],
                 lastMessage: {
-                    text: item.lastMessage,
+                    content: item.lastMessage,
                     createdAt: item.lastMessageTime,
                     sender: item.sender_id,
                 },
@@ -143,7 +142,10 @@ const conversationsSlice = createSlice({
 
         clearNewUsers: (state) => {
             state.newUsers = []
-        }
+        },
+
+
+        
     },
 
     extraReducers: (builder) => {
@@ -227,51 +229,58 @@ export const { selectById: selectUserById } = usersAdapter.getSelectors(state =>
 // Selectors
 export const selectConversationListItems = createSelector(
     [
-        selectAllConversations,
-        (state) => usersAdapter.getSelectors().selectEntities(state.users),
-        (state) => state.auth.user?.id // Get current user ID from your auth slice
+      selectAllConversations,
+      (state) => usersAdapter.getSelectors().selectEntities(state.users),
+      (state) => state.auth.user?.id
     ],
     (conversations, users, currentUserId) => {
-        return conversations.map(conv => {
-            // Find the conversation opponent (participant that's not current user)
-            const opponent = conv.participants
-                .map(userId => users[userId] || { id: userId }) // Handle missing users
-                .find(user => user.id !== currentUserId);
-
-            // Get last message details with sender info
-            const lastMessage = conv.lastMessage ? {
-                text: conv.lastMessage.text,
-                time: conv.lastMessage.createdAt,
-                isSentByMe: conv.lastMessage.sender === currentUserId,
-                senderName: users[conv.lastMessage.sender]?.username || 'Unknown'
-            } : null;
-
-            return {
-                id: conv.id,
-                opponent: {
-                    id: opponent?.id,
-                    name: opponent?.username || 'Unknown User',
-                    avatar: opponent?.profileImage,
-                    isOnline: opponent?.isOnline || false,
-                    lastActive: opponent?.lastActive || "haha"
-                },
-                lastMessage,
-                unreadCount: conv.unreadCount,
-                isTyping: conv.typingUsers.some(id =>
-                    id !== currentUserId && users[id]?.isOnline
-                ),
-                updatedAt: conv.updatedAt
-            };
-        }).sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)); // Sort by recent
+      return conversations?.map((conv) => {
+        const participantIds = conv?.participants || [];
+  
+        // Get opponent (the other user in the conversation)
+        const opponent = participantIds
+          .map((userId) => users?.[userId] ?? { id: userId })
+          .find((user) => user?.id !== currentUserId);
+  
+        const lastMessage = conv?.lastMessage;
+        const senderUser = lastMessage?.sender ? users?.[lastMessage.sender] : null;
+  
+        return {
+          id: conv?.id ?? '',
+          opponent: {
+            id: opponent?.id ?? '',
+            name: opponent?.username ?? 'Unknown User',
+            avatar: opponent?.profileImage ?? null,
+            isOnline: opponent?.isOnline ?? false,
+            lastActive: opponent?.lastActive ?? null
+          },
+          lastMessage: lastMessage
+            ? {
+                content: lastMessage?.content ?? '',
+                time: lastMessage?.createdAt ?? '',
+                isSentByMe: lastMessage?.sender === currentUserId,
+                senderName: senderUser?.username ?? 'Unknown'
+              }
+            : null,
+          unreadCount: conv?.unreadCount ?? 0,
+          isTyping: (conv?.typingUsers ?? []).some(
+            (id) => id !== currentUserId && users?.[id]?.isOnline
+          ),
+          updatedAt: conv?.updatedAt ?? null
+        };
+      })?.sort(
+        (a, b) => new Date(b.updatedAt ?? 0) - new Date(a.updatedAt ?? 0)
+      ) ?? [];
     }
-);
+  );
+  
 
 
 // Custom selector to find conversation by participant
 export const selectConversationByUserId = createSelector(
     [selectAllConversations, (state, userId) => userId],
     (conversations, userId) => conversations.find(conv =>
-        conv.participants.some(p => p === userId) 
+        conv.participants.some(p => p === userId)
     )
 )
 
@@ -302,6 +311,30 @@ export const selectConversationMessages = createSelector(
     }
 );
 
+// 1. Get the adapter selectors
+const messagesSelectors = messagesAdapter.getSelectors(state => state.messages);
+
+// 2. Selector to filter messages by conversationId
+export const selectMessagesByConversationId = createSelector(
+    [
+        messagesSelectors.selectAll, // All messages (already sorted by `createdAt`)
+        (state, conversationId) => conversationId, // Dynamic argument: activeConvId
+    ],
+    (messages, conversationId) =>
+        messages.filter(message => message.conversationId === conversationId)
+);
+
+// 3. Selector for active conversation messages (combines with activeConvId)
+export const selectActiveConversationMessages = createSelector(
+    [
+        (state) => state.conversations.activeConversationId, // Active conversation ID
+        (state) => selectMessagesByConversationId(state, state.conversations.activeConversationId),
+    ],
+    (activeConvId, messages) => messages
+);
+
+
+
 export const conversationsReducer = conversationsSlice.reducer;
 export const usersReducer = usersSlice.reducer;
 
@@ -313,7 +346,9 @@ export const {
     removeTypingUser,
     messagesLoaded,
     prependMessage,
-    clearNewUsers
+    clearNewUsers,
+    confirmMessage,
+    markMessageFailed
 } = conversationsSlice.actions;
 
 export const {

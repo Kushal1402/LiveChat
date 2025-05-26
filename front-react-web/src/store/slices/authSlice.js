@@ -220,7 +220,7 @@ const initialState = {
     tempToken: null,
     tempEmail: null,
     tempUserData: null,
-    flowType: null,    
+    flowType: null,
 };
 
 const authSlice = createSlice({
@@ -248,7 +248,7 @@ const authSlice = createSlice({
             state.token = null;
             localStorage.removeItem('vibe-token');
         },
-        
+
     },
     extraReducers: (builder) => {
         builder
@@ -417,9 +417,13 @@ const authSlice = createSlice({
             })
             .addCase(logoutUser.fulfilled, (state, action) => {
                 state.isLoggingOut = false
+                state.user = null
+                state.token = null
+
             })
             .addCase(logoutUser.rejected, (state, action) => {
                 state.isLoggingOut = false
+
             })
 
 

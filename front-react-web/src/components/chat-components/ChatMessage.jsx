@@ -1,17 +1,19 @@
 import { useEffect, useRef } from "react"
-import { format } from "date-fns"
 // Import Avatar components
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import UserAvatar from "./UserAvatart"
 import { TbChecks, TbCheck } from "react-icons/tb";
 import { useMobileView } from "@/hooks/use-mobile-view";
 import { useSelector } from "react-redux";
-import { selectConversationMessages } from "@/store/slices/chatSlice";
+import { selectActiveConversationMessages, selectConversationMessages } from "@/store/slices/chatSlice";
 
 export default function ChatMessages({ activeConversation }) {
 
   const conversionMessages = useSelector(selectConversationMessages);
-  console.log(conversionMessages);
+
+  const activeMessages = useSelector(selectActiveConversationMessages);
+  console.log('activeMessages: ', activeMessages);
+
 
   const messagesEndRef = useRef(null)
   const isMobile = useMobileView()
@@ -27,102 +29,175 @@ export default function ChatMessages({ activeConversation }) {
   // Group messages by date
   const groupedMessages = {}
 
-  conversionMessages.forEach((message) => {
-    const date = new Date(message.timestamp).toDateString()
-    if (!groupedMessages[date]) {
-      groupedMessages[date] = []
-    }
-    groupedMessages[date].push(message)
-  })
-  Object.keys(groupedMessages).forEach((date) => {
-    groupedMessages[date].sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-  });
 
+
+
+  console.log("conversionMessages: ", conversionMessages);
+
+  /////////////////////////////////// /////////////////////////////////////////////////////
+
+  // Format time (e.g., "2:30 PM")
   const formatMessageTime = (timestamp) => {
-    console.log(timestamp);
-    return format(new Date(timestamp), "h:mm a")
-  }
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  };
 
+  // Check if date is today
   const isToday = (date) => {
-    return new Date(date).toDateString() === new Date().toDateString()
-  }
+    return new Date(date).toDateString() === new Date().toDateString();
+  };
 
+  // Check if date is yesterday
   const isYesterday = (date) => {
-    const yesterday = new Date()
-    yesterday.setDate(yesterday.getDate() - 1)
-    return new Date(date).toDateString() === yesterday.toDateString()
-  }
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return new Date(date).toDateString() === yesterday.toDateString();
+  };
 
-  const formatDate = (date) => {
-    if (isToday(date)) return "Today"
-    if (isYesterday(date)) return "Yesterday"
-    return date
-  }
+  // Format date header (e.g., "Today", "Yesterday", or "Mon May 27, 2025")
+  const formatGroupDate = (dateString) => {
+    const date = new Date(dateString);
+    if (isToday(date)) return "Today";
+    if (isYesterday(date)) return "Yesterday";
+    return date.toLocaleDateString([], {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    if (isToday(date)) return "Today";
+    if (isYesterday(date)) return "Yesterday";
+    return date.toLocaleDateString([], {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
+  };
 
-  console.log(conversionMessages);
+  const groupMessagesByDate = (messages) => {
+    const groupedMessages = {};
+
+    messages.forEach((message) => {
+      const date = new Date(message.createdAt).toDateString(); // Use createdAt from your message
+
+      if (!groupedMessages[date]) {
+        groupedMessages[date] = [];
+      }
+      groupedMessages[date].push(message);
+    });
+
+    // Sort messages within each date group
+    Object.keys(groupedMessages).forEach((date) => {
+      groupedMessages[date].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    });
+
+    return groupedMessages;
+  };
+
+  const processMessages = (messages) => {
+    const grouped = groupMessagesByDate(messages);
+
+    return Object.entries(grouped).map(([dateString, messages]) => ({
+      dateHeader: formatGroupDate(dateString),
+      messages: messages.map(msg => ({
+        ...msg,
+        formattedTime: formatMessageTime(msg.createdAt) // Add formatted time to each message
+      }))
+    }));
+  };
+
+  const processedMessages = processMessages(conversionMessages);
+
+  console.log(processedMessages);
+
+
+
 
   return (
-    <div
-      className={`flex-1 overflow-y-auto p-4 "bg-gray-50 dark:bg-gray-800`}
-    >
-      {Object.keys(groupedMessages).map((date) => (
-        <div key={date}>
+    <div className={`flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-800`}>
+      {processedMessages?.map(({ index, dateHeader, messages }) => (
+        <div key={index}>
+          {/* Date header */}
           <div className="flex justify-center my-4">
             <span className="px-3 py-1 text-xs bg-gray-200 dark:bg-gray-700 rounded-full text-gray-600 dark:text-gray-300">
-              {formatDate(date)}
+              {dateHeader || 'invalid'}
             </span>
           </div>
-          {groupedMessages[date].map((message) => (
-            <div key={message.id} className={`flex mb-4 ${message.senderId === user._id ? "justify-end" : "justify-start"}`}>
-              {message.senderId !== user._id && (
-                <div className="mr-2 mt-1">
-                  <UserAvatar user={activeConversation?.opponent} />
-                </div>
-              )}
-              <div
-                className={`max-w-[75%] ${message.senderId === user._id
-                  ? "bg-primary text-primary-foreground dark:bg-gray-700 dark:text-gray-100"
-                  : "bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  } rounded-lg p-3 shadow ${message.senderId === user._id ? "rounded-tr-none" : "rounded-tl-none"
-                  }`}
-              >
-                <p>{message.content}</p>
 
-                {/* Time & Ticks shifted to the right */}
+          {/* Messages */}
+          {messages?.map((message) => {
+            const isMe = message.sender._id === user._id;
+            return (
+              <div
+                key={message._id}
+                className={`flex mb-4 ${isMe ? "justify-end" : "justify-start"}`}
+              >
+                {/* Sender avatar (left side for received messages) */}
+                {!isMe && (
+                  <div className="mr-2 mt-1">
+                    <UserAvatar
+                      user={message.sender}
+                      src={message.sender.profile_picture}
+                      fallback={message.sender.username.charAt(0)}
+                    />
+                  </div>
+                )}
+
+                {/* Message bubble */}
                 <div
-                  className={`text-xs mt-1 flex items-center justify-end ${message.senderId === user._id
-                    ? "text-gray-300 dark:text-gray-300"
-                    : "text-gray-600 dark:text-gray-300"
+                  className={`max-w-[75%] ${isMe
+                    ? "bg-primary text-primary-foreground dark:bg-gray-700"
+                    : "bg-white dark:bg-gray-700"
+                    } rounded-lg p-3 shadow ${isMe ? "rounded-tr-none" : "rounded-tl-none"
                     }`}
                 >
-                  {formatMessageTime(message.timestamp)}
-                  {message.senderId === user._id && (
-                    <span className="ml-1">
-                      {message.isRead ?
-                        <TbChecks className="w-4 h-4 text-blue-500" /> :
-                        <TbCheck className="text-gray-500 w-4 h-4" />
-                      }
-                    </span>
-                  )}
-                </div>
-              </div>
+                  <p className="text-gray-900 dark:text-gray-100">
+                    {message.content}
+                  </p>
 
-              {message.senderId === user._id && !isMobile && (
-                <div className="ml-2 mt-1">
-                  {/* <Avatar>
-                    <AvatarImage src="/placeholder.svg?height=40&width=40" alt="Me" />
-                    <AvatarFallback>ME</AvatarFallback>
-                  </Avatar> */}
-                  <UserAvatar user={user} />
+                  {/* Message footer (time + read receipts) */}
+                  <div
+                    className={`text-xs mt-1 flex items-center ${isMe ? "justify-end" : "justify-start"
+                      } ${isMe ? "text-gray-300 dark:text-gray-300" : "text-gray-500 dark:text-gray-400"
+                      }`}
+                  >
+                    {formatMessageTime(message.createdAt)}
+                    {isMe && (
+                      <span className="ml-1">
+                        {message.readBy?.length > 0 ? (
+                          <TbChecks className="w-4 h-4 text-blue-500" />
+                        ) : (
+                          <TbCheck className="text-gray-500 dark:text-gray-300 w-4 h-4" />
+                        )}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              )}
-            </div>
-          ))}
+
+                {/* My avatar (right side for sent messages) */}
+                {isMe && !isMobile && (
+                  <div className="ml-2 mt-1">
+                    <UserAvatar
+                      user={user}
+                      src={user.profile_picture}
+                      fallback={user.username.charAt(0)}
+                    />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       ))}
       <div ref={messagesEndRef} />
     </div>
-  )
+  );
 }
 
 

@@ -28,7 +28,15 @@ import { useTheme } from "next-themes"
 import { useSelector } from "react-redux"
 import ProfileUpdateDialog from "../profile-components/ProfileUpdateDialog"
 import LogoutDialog from "../profile-components/LogoutDIalog"
-import { fetchConversations, messageReceived, prependMessage, presenceUpdated, profileUpdated, selectConversationByUserId, selectConversationListItems } from "@/store/slices/chatSlice"
+import {
+  fetchConversations,
+  messageReceived,
+  prependMessage,
+  presenceUpdated,
+  profileUpdated,
+  selectConversationByUserId,
+  selectConversationListItems
+} from "@/store/slices/chatSlice"
 import MemoizedConversationItem from "./MemoizedConversationItem"
 import { fakeMessages, messageAdded, messagesReceived } from "@/store/slices/messages.slice"
 import { useSocketContext } from "@/context/SocketContext"
@@ -39,7 +47,6 @@ export default function ChatSidebar({ onSelectConversation }) {
   const { user } = useSelector((state) => state.auth)
   const { activeConversation } = useSelector((state) => state.conversations)
   const conversationsLoaded = useSelector(state => state.conversations.loaded);
-  console.log(conversationsLoaded);
 
   // console.log(activeConversation);
   // console.log(user);
@@ -59,16 +66,14 @@ export default function ChatSidebar({ onSelectConversation }) {
   //   }
   // }, [conversationsLoaded, dispatch]);
 
-
   useEffect(() => {
     const handleMessageReceived = (message) => {
       console.log('📨 Message received via socket:', message);
-
       dispatch(messageAdded(message)); // for add message in message slice 
 
       dispatch(prependMessage({
         conversationId: message.conversationId,
-        messageId: message.id
+        messageId: message._id
       })); // for add messaage in conversion_list
 
       dispatch(messageReceived(message)) // for add message in last_message 
@@ -80,25 +85,38 @@ export default function ChatSidebar({ onSelectConversation }) {
       dispatch(presenceUpdated(presence));
     };
 
+
     const handleUserProfileUpdate = (profile) => {
       console.log('👤 User profile updated:', profile);
       dispatch(profileUpdated(profile));
     };
 
+
+    const handleMssageDelivered = ({ success, message, tempId }) => {
+      console.log(success, message, tempId);
+      
+    }
+    const handleMssageFailed = ({ message, tempId }) => {
+
+    }
+
     // Add the socket listener
-    addListener('message_received', handleMessageReceived);
+    addListener('new-message', handleMessageReceived);
     addListener('isOnline', handlePresenceUpdated);
     addListener('user-profile-updated', handleUserProfileUpdate)
+    addListener('message-delivered', handleMssageDelivered)
+    addListener('message-failed', handleMssageFailed)
+
 
 
 
     // Simulate incoming message manually
     // const fakeMessage = {
     //   id: 'mid2',
-    //   conversationId: '5',
+    //   conversationId: '680202699548b038d0ee873b',
     //   text: '🔥 This is a fake message from u7',
-    //   senderId: 'u6',
-    //   receiverId: '67eb104b6d48a231b8de76bf',
+    //   senderId: '680202699548b038d0ee8733',
+    //   receiverId: '680202699548b038d0ee8730',
     //   createdAt: new Date().toISOString(),
     // };
 
@@ -120,11 +138,11 @@ export default function ChatSidebar({ onSelectConversation }) {
   const conversations = useSelector(selectConversationListItems);
 
   const handleNewSelectedConversation = (user) => {
-    console.log(user);    
+    console.log(user);
     const state = store.getState()
     const existingConversation = selectConversationByUserId(state, user._id)
     if (existingConversation) {
-      console.log(existingConversation);     
+      console.log(existingConversation);
     }
   }
 
@@ -253,6 +271,7 @@ export default function ChatSidebar({ onSelectConversation }) {
       {/* Conversations List */}
       <div className="overflow-y-auto flex-1">
         {conversations.map((conv) => (
+
           <MemoizedConversationItem
             key={conv.id}
             conv={conv}

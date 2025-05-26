@@ -24,7 +24,7 @@ const MemoizedConversationItem = React.memo(
                 </div>
                 <div className="flex justify-between items-center gap-2">
                     <p className="text-sm text-gray-500 dark:text-gray-400 truncate flex-1">
-                        {conv.typingUsers ? 'Typing...' : ( conv.lastMessage?.text)}
+                        {conv.typingUsers ? 'Typing...' : ( conv.lastMessage?.content)}
                     </p>
                     {conv.unreadCount > 0 && (
                         <span className="bg-primary text-primary-foreground text-xs font-medium rounded-full w-5 h-5 flex items-center justify-center shrink-0">

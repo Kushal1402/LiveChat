@@ -6,12 +6,12 @@ import storage from "redux-persist/lib/storage";
 import persistStore from 'redux-persist/es/persistStore';
 import { messagesReducer } from './slices/messages.slice';
 
-const rootReducer = combineReducers({
-  auth: authReducer,
-  conversations: conversationsReducer,
-  users : usersReducer,
-  messages : messagesReducer
-});
+  const rootReducer = combineReducers({
+    auth: authReducer,
+    conversations: conversationsReducer,
+    users : usersReducer,
+    messages : messagesReducer
+  });
 
 const persistConfig = {
   key: "root",

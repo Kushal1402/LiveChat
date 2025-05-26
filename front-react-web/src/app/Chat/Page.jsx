@@ -14,10 +14,10 @@ import { useSelector } from "react-redux"
 import { Input } from "@/components/ui/input"
 import NewConversationDialog from "@/components/chat-components/NewConversationDialog"
 import { dispatch, store } from "@/store/store"
-import { markAsRead, setActiveConversation } from "@/store/slices/chatSlice"
+import {markAsRead, messageReceived, prependMessage, setActiveConversation } from "@/store/slices/chatSlice"
 import { useSocketContext } from "@/context/SocketContext"
 import { formatLastSeen } from "@/utils/dateUtils"
-
+import { addTempMessage, messageAdded } from "@/store/slices/messages.slice"
 export default function ChatApplication() {
   const isMobile = useMobileView()
   const { setTheme } = useTheme()
@@ -292,19 +292,63 @@ export default function ChatApplication() {
 
   const [selectedUser, setSelectedUser] = useState('')
 
+  const { socket } = useSocketContext()
+  // const handleSendMessage = (text) => {
+  //   if (!text.trim() || !selectedUser) return
+
+  //   const newMessage = {
+  //     conversationId: activeConversation.id,
+  //     content: text,
+  //     senderId: user?._id,
+  //     reciverId: activeConversation?.opponent?.id,
+  //     timestamp: new Date().toISOString(),
+  //   }
+
+  //   setMessages([...messages, newMessage])
+  //   console.log(newMessage);
+    
+  //   socket.emit("send-message",newMessage)
+  // }
   const handleSendMessage = (text) => {
-    if (!text.trim() || !selectedUser) return
-
+    if (!text.trim() || !selectedUser) return;
+  
+    const tempId = `temp-${Date.now()}`; 
+    
     const newMessage = {
-      id: Date.now().toString(),
-      userId: "me",
-      text: text,
-      timestamp: new Date().toISOString(),
-      isRead: true,
-    }
+      _id: tempId,
+      conversationId: activeConversation.id,
+      content: text,
+      sender: {
+        _id: user._id,
+        username: user.username,
+        profile_picture: user.profile_picture
+      },
+      receiverId: activeConversation?.opponent?.id,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isTemp: true,
+      status: 'sending'
+    };
+  
+    // 1. Optimistically add to local state
+    // dispatch(addTempMessage(newMessage));
+    dispatch(messageAdded(newMessage)); // for add message in message slice 
 
-    setMessages([...messages, newMessage])
-  }
+      dispatch(prependMessage({
+        conversationId: newMessage.conversationId,
+        messageId: newMessage._id
+      })); // for add messaage in conversion_list
+
+      dispatch(messageReceived(newMessage))
+  
+    // 2. Emit to server
+    socket.emit("send-message", {
+      ...newMessage,
+      tempId // Include for reference
+    });
+  
+
+  };
 
   useEffect(() => {
     if (!selectedUser) return;
@@ -327,7 +371,6 @@ export default function ChatApplication() {
   }, [selectedUser]);
 
   const handleSelectUser = useCallback((user) => {
-    console.log(user);
 
     dispatch(setActiveConversation(user))
     // dispatch(markAsRead(activeConversation?.id))
@@ -341,7 +384,9 @@ export default function ChatApplication() {
   }, [activeConversation, dispatch]);
 
   const handleSelectConversation = (user) => {
-    handleSelectUser(user)   
+    console.log(user);
+    
+    handleSelectUser(user)
   }
 
   // Handle back button on mobile
