@@ -7,6 +7,8 @@ const UserModel = require("../models/user");
 const ConversationModel = require("../models/conversations");
 const MessageModel = require("../models/messages");
 
+const { isValidObjectId, isNonEmptyString } = require("../helper/index");
+
 let jwtr;
 let redisClient;
 let io;
@@ -129,7 +131,7 @@ const initSocket = (server) => {
             });
 
             // Handle Message event
-            socket.on("send-message", async ({ conversationId, content }) => {
+            socket.on("send-message", async ({ conversationId, content, tempId }) => {
                 const senderId = SocketUser.id;
 
                 if (!conversationId || !isValidObjectId(conversationId) || !isNonEmptyString(content)) {
@@ -154,10 +156,10 @@ const initSocket = (server) => {
 
                     emitToUsers(recipients, "new-message", fullMessage);
 
-                    socket.emit("message-sent", { success: true });
+                    socket.emit("message-delivered", { success: true, message: fullMessage, tempId: tempId });
                 } catch (err) {
                     console.error("Socket message error:", err);
-                    socket.emit("error", { message: "Message failed to send." });
+                    socket.emit("message-failed", { message: "Message failed to send.", tempId: tempId });
                 }
             });
 
@@ -334,7 +336,8 @@ function emitToUsers(userIds, event, data) {
 
     // Emit to all users at once through their conversation rooms
     userIds.forEach(userId => {
-        io.to(userId).emit(event, data);
+        let stringUserId = userId.toString();
+        io.to(stringUserId).emit(event, data);
     });
     console.log(`Event ${event} emitted to ${userIds.length} users`);
 };

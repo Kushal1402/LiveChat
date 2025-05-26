@@ -42,6 +42,9 @@ const UserRoutes = require('./routes/user/user');
 // Conversation Routes
 const ConversationRoutes = require('./routes/user/conversation');
 
+// Message Routes
+const MessageRoutes = require('./routes/user/message');
+
 app.use(cors({ origin: "*", credentials: true }));
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -63,6 +66,8 @@ app.use("/api/guest", GuestRoutes);
 app.use("/api/user", UserRoutes);
 
 app.use("/api/conversation", ConversationRoutes);
+
+app.use("/api/message", MessageRoutes);
 
 // Base Route
 app.get("/", (req, res) => {

@@ -52,6 +52,6 @@ const MessageSchema = new Schema(
 MessageSchema.plugin(aggregatePaginate);
 MessageSchema.plugin(mongoosePaginate);
 
-MessageSchema.index({ conversationId: 1, createdAt: -1 });
+MessageSchema.index({ conversationId: 1, createdAt: -1, _id: -1 });
 
 module.exports = mongoose.model("Message", MessageSchema);
